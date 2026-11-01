@@ -119,7 +119,11 @@ const CivicAPI = {
         body: JSON.stringify(reportData)
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Could not submit report.');
+      if (!response.ok) {
+        const error = new Error(data.error || 'Could not submit report.');
+        error.status = response.status;
+        throw error;
+      }
       createdReport = data.report;
     } catch (err) {
       throw err;
@@ -473,7 +477,14 @@ function initIndexPage() {
         loadRecentIssues();
 
       } catch (err) {
-        showToast(err.message || 'Submission error. Please retry.', 'error');
+        if (err.status === 401 || /citizen login required/i.test(err.message || '')) {
+          citizenAuthenticated = false;
+          setCitizenAuthMode('login');
+          document.getElementById('citizenAuthModal')?.classList.add('open');
+          document.getElementById('citizenLoginEmail')?.focus();
+        } else {
+          showToast(err.message || 'Submission error. Please retry.', 'error');
+        }
       } finally {
         if (submitBtn) submitBtn.disabled = false;
         if (spinner) spinner.style.display = 'none';
