@@ -5,9 +5,22 @@
 
 const API_BASE_URL = window.location.origin;
 
+async function readApiResponse(response) {
+  const body = await response.text();
+  let data;
+  try {
+    data = body ? JSON.parse(body) : {};
+  } catch (_) {
+    const message = body.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    throw new Error(message || `Server returned an unreadable response (${response.status}).`);
+  }
+  if (!response.ok) throw new Error(data.error || data.message || `Request failed (${response.status}).`);
+  return data;
+}
+
 async function csrfFetch(url, options = {}) {
   const response = await fetch(`${API_BASE_URL}/api/csrf`, { credentials: 'same-origin' });
-  const { csrf_token: csrfToken } = await response.json();
+  const { csrf_token: csrfToken } = await readApiResponse(response);
   return fetch(url, {
     ...options,
     credentials: 'same-origin',
@@ -1059,7 +1072,7 @@ document.getElementById('citizenLoginForm')?.addEventListener('submit', async e 
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: document.getElementById('citizenLoginEmail').value, password: document.getElementById('citizenLoginPassword').value })
     });
-    const data = await response.json();
+    const data = await readApiResponse(response);
     if (!response.ok) throw new Error(data.error || 'Unable to log in.');
     window.location.assign('/citizen');
   } catch (err) { error.textContent = err.message; }
@@ -1084,7 +1097,7 @@ document.getElementById('citizenRegisterForm')?.addEventListener('submit', async
         confirm_password: document.getElementById('registerConfirmPassword').value
       })
     });
-    const data = await response.json();
+    const data = await readApiResponse(response);
     if (!response.ok) throw new Error(data.error || 'Could not create account.');
     document.getElementById('citizenLoginEmail').value = document.getElementById('registerEmail').value;
     document.getElementById('citizenRegisterForm').reset();
