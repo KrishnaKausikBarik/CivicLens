@@ -2,6 +2,7 @@ import hashlib
 import os
 import unittest
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from unittest.mock import patch
 from werkzeug.security import generate_password_hash
 
@@ -82,7 +83,30 @@ class PasswordResetTests(unittest.TestCase):
             smtp_class.return_value.__enter__.return_value.starttls.assert_called_once()
             message = smtp_class.return_value.__enter__.return_value.send_message.call_args.args[0]
             self.assertEqual(message["Subject"], "Reset Your CivicLens Password")
-            self.assertIn("http://127.0.0.1:5000/reset-password#token=test-reset-token", message.get_body(preferencelist=("html",)).get_content())
+            html = message.get_body(preferencelist=("html",)).get_content()
+            self.assertIn("href='http://127.0.0.1:5000/reset-password#token=test-reset-token'", html)
+            self.assertIn("background-color:#065f46", html)
+            self.assertIn("Reset your password", html)
+            self.assertIn("Hello Test Citizen", html)
+            self.assertIn("15 minutes", html)
+
+    def test_production_reset_email_uses_configured_vercel_url(self):
+        with self.app.app_context(), patch.dict(os.environ, {
+            "FRONTEND_URL": "https://civiclens-lake.vercel.app",
+            "SMTP_HOST": "smtp.example.test",
+            "SMTP_PORT": "587",
+            "SMTP_USERNAME": "sender@example.test",
+            "SMTP_PASSWORD": "test-app-password",
+            "SMTP_SENDER_EMAIL": "sender@example.test",
+            "SMTP_SENDER_NAME": "CivicLens",
+        }), patch("utils.password_reset.smtplib.SMTP") as smtp_class:
+            user = User.query.filter_by(email="citizen@example.test").one()
+            send_password_reset_email(user, "production-test-token")
+
+        message = smtp_class.return_value.__enter__.return_value.send_message.call_args.args[0]
+        html = message.get_body(preferencelist=("html",)).get_content()
+        self.assertIn("href='https://civiclens-lake.vercel.app/reset-password#token=production-test-token'", html)
+        self.assertNotIn("127.0.0.1", html)
 
     def test_valid_reset_updates_password_and_token_cannot_be_reused(self):
         token = self.issue_reset()
@@ -166,6 +190,12 @@ class PasswordResetTests(unittest.TestCase):
         self.assertEqual(response.headers["Cache-Control"], "no-store")
         self.assertEqual(response.headers["Referrer-Policy"], "no-referrer")
         self.assertIn(b"resetPasswordForm", response.data)
+
+    def test_reset_frontend_reads_fragment_cleans_history_and_posts_token(self):
+        script = (Path(__file__).resolve().parents[1] / "Frontend" / "static" / "js" / "main.js").read_text(encoding="utf-8")
+        self.assertIn("new URLSearchParams(resetUrl.hash.slice(1)).get('token')", script)
+        self.assertIn("window.history.replaceState(null, '', '/reset-password')", script)
+        self.assertIn("body: JSON.stringify({ token: resetToken })", script)
 
     def test_local_access_log_redacts_reset_token(self):
         path = "/reset-password?token=secret-token&source=email"
