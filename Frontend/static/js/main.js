@@ -261,14 +261,12 @@ let cachedReports = [];
 function initIndexPage() {
   const form = document.getElementById('complaintForm');
   const pickerMap = MapModule.initPickerMap('pickerMap', 'latitude', 'longitude');
+  let citizenAuthenticated = false;
   fetch(`${API_BASE_URL}/api/me`, { credentials: 'same-origin' }).then(r => r.json()).then(data => {
     if (data.user?.role === 'citizen') {
-      if (form) form.style.display = '';
+      citizenAuthenticated = true;
       const authLink = document.getElementById('citizenAuthBtn');
       if (authLink) { authLink.textContent = 'My Complaints'; authLink.href = '/citizen'; }
-    } else {
-      setCitizenAuthMode('login');
-      document.getElementById('citizenAuthModal')?.classList.add('open');
     }
   }).catch(() => {});
 
@@ -380,6 +378,13 @@ function initIndexPage() {
 
       if (isNaN(latitude) || isNaN(longitude)) {
         showToast('Please select a point on the map to record location.', 'error');
+        return;
+      }
+
+      if (!citizenAuthenticated) {
+        setCitizenAuthMode('login');
+        document.getElementById('citizenAuthModal')?.classList.add('open');
+        document.getElementById('citizenLoginEmail')?.focus();
         return;
       }
 
