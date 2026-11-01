@@ -1711,32 +1711,26 @@ textarea.form-control {
   gap: 0.5rem;
 }
 
-/* Password reset page: homepage shell with the shared authentication-card styling. */
-body.reset-password-page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+/* Password reset is rendered as a modal over the real homepage. */
+body.reset-password-mode {
+  overflow: hidden;
 }
 
-.reset-page-main {
-  width: 100%;
-  flex: 1 0 auto;
-  min-height: 480px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(2rem, 6vw, 4.5rem) 1rem;
-  background: var(--color-bg-base);
-  border-bottom: 0;
+.reset-password-overlay {
+  z-index: 3000;
+  background-color: rgba(15, 23, 42, 0.48);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 
-.reset-password-card {
+.reset-password-overlay .reset-password-card {
   width: min(100%, 470px);
   max-width: 470px;
-  margin: 0 auto;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
   text-align: left;
   border-radius: var(--radius-md);
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12), 0 3px 10px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 20px 55px rgba(15, 23, 42, 0.25), 0 5px 16px rgba(15, 23, 42, 0.12);
 }
 
 .reset-password-header {
@@ -1828,31 +1822,16 @@ body.reset-password-page {
   text-underline-offset: 2px;
 }
 
-.reset-page-footer {
-  width: 100%;
-  margin-top: 0;
-  padding: 1.15rem 1.5rem;
-}
-
-.reset-page-footer .footer-info {
-  min-width: 0;
-  max-width: 100%;
-}
-
-.reset-page-footer .footer-info p {
-  max-width: 100%;
-}
-
 @media (max-width: 600px) {
-  .reset-page-main {
-    min-height: 0;
-    padding: 1.5rem 1rem;
+  .reset-password-overlay {
+    padding: 0.75rem;
   }
 
-  .reset-password-card {
+  .reset-password-overlay .reset-password-card {
     width: 100%;
     max-width: 470px;
     min-width: 0;
+    max-height: calc(100vh - 1.5rem);
   }
 
   .reset-password-header,
@@ -1865,9 +1844,6 @@ body.reset-password-page {
     font-size: 1.1rem;
   }
 
-  .reset-page-footer {
-    padding: 1rem;
-  }
 }
 
 .modal-grid {

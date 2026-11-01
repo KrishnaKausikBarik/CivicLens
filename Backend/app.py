@@ -123,7 +123,7 @@ def create_app(config_name=None):
 
     @app.get("/reset-password")
     def serve_reset_password():
-        response = make_response(render_template("reset_password.html"))
+        response = make_response(render_template("index.html", reset_mode=True))
         response.headers["Cache-Control"] = "no-store"
         response.headers["Referrer-Policy"] = "no-referrer"
         return response

@@ -1151,7 +1151,7 @@ document.getElementById('citizenRegisterForm')?.addEventListener('submit', async
   } catch (err) { error.textContent = err.message; }
 });
 
-if (document.body.dataset.page === 'reset-password') {
+function initPasswordReset() {
   const resetForm = document.getElementById('resetPasswordForm');
   const status = document.getElementById('resetPasswordStatus');
   const done = document.getElementById('resetPasswordDone');
@@ -1228,6 +1228,10 @@ if (document.body.dataset.page === 'reset-password') {
       status.classList.add('form-error');
     }
   });
+}
+
+if (document.body.dataset.resetMode === 'true' || document.body.dataset.page === 'reset-password') {
+  initPasswordReset();
 }
 
 if (new URLSearchParams(window.location.search).has('citizen_login')) {

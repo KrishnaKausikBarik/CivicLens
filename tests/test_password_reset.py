@@ -186,6 +186,11 @@ class PasswordResetTests(unittest.TestCase):
         self.assertEqual(reset.status_code, 400)
 
     def test_reset_page_is_not_cached_and_uses_no_referrer(self):
+        homepage = self.client.get("/")
+        self.assertEqual(homepage.status_code, 200)
+        self.assertIn(b"Make Your City Better", homepage.data)
+        self.assertNotIn(b"resetPasswordOverlay", homepage.data)
+
         response = self.client.get("/reset-password")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers["Cache-Control"], "no-store")
@@ -193,10 +198,16 @@ class PasswordResetTests(unittest.TestCase):
         self.assertIn(b"resetPasswordForm", response.data)
         self.assertIn(b"Create New Password", response.data)
         self.assertIn(b'class="navbar"', response.data)
+        self.assertIn(b'class="hero-section', response.data)
+        self.assertIn(b'class="footer"', response.data)
+        self.assertIn(b'class="modal-backdrop open reset-password-overlay"', response.data)
+        self.assertIn(b'aria-modal="true"', response.data)
         self.assertIn(b"Show password", response.data)
         self.assertIn(b"Return to login", response.data)
         self.assertIn(b'name="viewport"', response.data)
-        self.assertIn(b'class="footer reset-page-footer"', response.data)
+        self.assertIn(b'data-reset-mode="true"', response.data)
+        homepage.close()
+        response.close()
 
     def test_reset_frontend_reads_fragment_cleans_history_and_posts_token(self):
         script = (Path(__file__).resolve().parents[1] / "Frontend" / "static" / "js" / "main.js").read_text(encoding="utf-8")
@@ -234,7 +245,8 @@ class PasswordResetTests(unittest.TestCase):
                 reset_page = production_client.get("/reset-password")
                 self.assertEqual(reset_page.status_code, 200)
                 self.assertIn(b"Create New Password", reset_page.data)
-                self.assertIn(b"reset-page-main", reset_page.data)
+                self.assertIn(b"reset-password-overlay", reset_page.data)
+                self.assertIn(b"Make Your City Better", reset_page.data)
 
     def test_production_rejects_direct_database_and_sqlite_urls(self):
         for url in (
@@ -339,7 +351,7 @@ class PasswordResetTests(unittest.TestCase):
         self.assertEqual(javascript.status_code, 200)
         self.assertIn(b"--color-primary", css.data)
         self.assertIn(b"width: min(100%, 470px)", css.data)
-        self.assertIn(b"justify-content: center", css.data)
+        self.assertIn(b"backdrop-filter: blur(4px)", css.data)
         self.assertIn(b"resetUrl.hash.slice(1)", javascript.data)
         project_root = Path(__file__).resolve().parents[1]
         self.assertEqual(css.data, (project_root / "Frontend" / "static" / "css" / "style.css").read_bytes())
@@ -365,7 +377,7 @@ class PasswordResetTests(unittest.TestCase):
             response.close()
 
         html_pages = list((public_dir.parent / "Frontend").rglob("*.html"))
-        self.assertEqual(len(html_pages), 8)
+        self.assertEqual(len(html_pages), 7)
         for page in html_pages:
             source = page.read_text(encoding="utf-8")
             for asset in expected_sizes:
