@@ -38,6 +38,29 @@ class PasswordResetTests(unittest.TestCase):
             db.session.remove()
             db.drop_all()
 
+    def test_shared_footer_has_secure_developer_links_on_home_and_dashboard(self):
+        developers = {
+            "Krishna Kausik Barik": "https://www.linkedin.com/in/krishna-kausik-barik-33306b293/",
+            "Diptesh Panda": "https://www.linkedin.com/in/dipteshpanda/",
+            "Diptiman Singha": "https://www.linkedin.com/in/diptiman-singha-45a63a36a/",
+        }
+        for path in ("/", "/dashboard"):
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 200)
+            html = response.get_data(as_text=True)
+            self.assertIn("&copy; 2026 CivicLens Platform. All rights reserved.", html)
+            self.assertIn("Developed with", html)
+            for name, url in developers.items():
+                self.assertIn(
+                    f'<a href="{url}" target="_blank" rel="noopener noreferrer">{name}</a>',
+                    html,
+                )
+
+        css = Path("Frontend/static/css/style.css").read_text(encoding="utf-8")
+        self.assertIn(".footer-developer-links a:hover", css)
+        self.assertIn(".footer-developer-links a:focus-visible", css)
+        self.assertIn(".footer-developer-links {", css)
+
     def post_json(self, path, payload, include_csrf=True):
         headers = {"Content-Type": "application/json"}
         if include_csrf:
@@ -247,6 +270,15 @@ class PasswordResetTests(unittest.TestCase):
                 self.assertIn(b"Create New Password", reset_page.data)
                 self.assertIn(b"reset-password-overlay", reset_page.data)
                 self.assertIn(b"Make Your City Better", reset_page.data)
+                homepage = production_client.get("/")
+                main_script = production_client.get("/static/js/main.js")
+                self.assertEqual(homepage.status_code, 200)
+                self.assertIn(b"locationSuggestions", homepage.data)
+                self.assertEqual(main_script.status_code, 200)
+                self.assertIn(b"https://photon.komoot.io/api/", main_script.data)
+                homepage.close()
+                main_script.close()
+                reset_page.close()
 
     def test_production_rejects_direct_database_and_sqlite_urls(self):
         for url in (
@@ -362,6 +394,26 @@ class PasswordResetTests(unittest.TestCase):
         css.close()
         javascript.close()
 
+    def test_photon_location_autocomplete_preserves_manual_map_picker(self):
+        homepage = self.client.get("/")
+        self.assertEqual(homepage.status_code, 200)
+        self.assertIn(b'id="areaSearchInput"', homepage.data)
+        self.assertIn(b'aria-controls="locationSuggestions"', homepage.data)
+        self.assertIn(b'id="locationSuggestions"', homepage.data)
+
+        project_root = Path(__file__).resolve().parents[1]
+        script = (project_root / "Frontend" / "static" / "js" / "main.js").read_text(encoding="utf-8")
+        map_script = (project_root / "Frontend" / "static" / "js" / "map.js").read_text(encoding="utf-8")
+        stylesheet = (project_root / "Frontend" / "static" / "css" / "style.css").read_text(encoding="utf-8")
+        self.assertIn("https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=6", script)
+        self.assertIn("query.length < 3", script)
+        self.assertIn("searchPhotonLocations(query, requestVersion), 350", script)
+        self.assertIn("pickerMap.setLocation(coordinates[1], coordinates[0], 16)", script)
+        self.assertIn("map.on('click'", map_script)
+        self.assertIn(".location-suggestions", stylesheet)
+        self.assertIn("z-index: 1200", stylesheet)
+        homepage.close()
+
     def test_favicon_assets_are_served_and_referenced_by_every_page(self):
         public_dir = Path(__file__).resolve().parents[1] / "public"
         expected_sizes = {
@@ -379,7 +431,10 @@ class PasswordResetTests(unittest.TestCase):
                 self.assertEqual(struct.unpack(">II", data[16:24]), size)
             response.close()
 
-        html_pages = list((public_dir.parent / "Frontend").rglob("*.html"))
+        html_pages = [
+            page for page in (public_dir.parent / "Frontend").rglob("*.html")
+            if page.parent.name != "partials"
+        ]
         self.assertEqual(len(html_pages), 7)
         for page in html_pages:
             source = page.read_text(encoding="utf-8")

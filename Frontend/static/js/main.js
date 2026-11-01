@@ -324,6 +324,165 @@ function initIndexPage() {
   // Area / Locality Search Feature
   const areaInput = document.getElementById('areaSearchInput');
   const areaBtn = document.getElementById('areaSearchBtn');
+  const locationSuggestions = document.getElementById('locationSuggestions');
+  let locationSearchTimer = null;
+  let locationSearchController = null;
+  let locationSearchVersion = 0;
+  let locationFeatures = [];
+  let activeLocationIndex = -1;
+
+  const hideLocationSuggestions = () => {
+    if (!locationSuggestions) return;
+    locationSuggestions.hidden = true;
+    locationSuggestions.replaceChildren();
+    areaInput?.setAttribute('aria-expanded', 'false');
+    areaInput?.removeAttribute('aria-activedescendant');
+    areaInput?.closest('.area-search-wrapper')?.classList.remove('has-location-suggestions');
+    activeLocationIndex = -1;
+  };
+
+  const showLocationSuggestionMessage = (message, loading = false) => {
+    if (!locationSuggestions) return;
+    locationSuggestions.innerHTML = loading
+      ? `<div class="location-suggestions-message" role="status"><span class="location-suggestions-spinner" aria-hidden="true"></span>${escapeHtml(message)}</div>`
+      : `<div class="location-suggestions-message" role="status">${escapeHtml(message)}</div>`;
+    locationSuggestions.hidden = false;
+    areaInput?.setAttribute('aria-expanded', 'true');
+    areaInput?.closest('.area-search-wrapper')?.classList.add('has-location-suggestions');
+  };
+
+  const highlightLocationMatch = (value, query) => {
+    const text = String(value || '');
+    const start = text.toLocaleLowerCase().indexOf(query.toLocaleLowerCase());
+    if (!query || start < 0) return escapeHtml(text);
+    const end = start + query.length;
+    return `${escapeHtml(text.slice(0, start))}<mark class="location-suggestion-match">${escapeHtml(text.slice(start, end))}</mark>${escapeHtml(text.slice(end))}`;
+  };
+
+  const describePhotonFeature = (feature) => {
+    const properties = feature?.properties || {};
+    const text = (value) => typeof value === 'string' ? value.trim() : '';
+    const houseStreet = [text(properties.housenumber), text(properties.street)].filter(Boolean).join(' ');
+    const city = text(properties.city) || text(properties.town) || text(properties.village) || text(properties.locality);
+    const primary = text(properties.name) || houseStreet || text(properties.street) || city || text(properties.district) || text(properties.country) || 'Unnamed place';
+    const details = [];
+    [houseStreet, text(properties.district), city, text(properties.county), text(properties.state), text(properties.postcode), text(properties.country)].forEach((part) => {
+      if (part && part.toLocaleLowerCase() !== primary.toLocaleLowerCase() && !details.some((existing) => existing.toLocaleLowerCase() === part.toLocaleLowerCase())) {
+        details.push(part);
+      }
+    });
+    return { primary, secondary: details.join(', '), address: [primary, details.join(', ')].filter(Boolean).join(', ') };
+  };
+
+  const setActiveLocationSuggestion = (index) => {
+    const options = locationSuggestions?.querySelectorAll('[data-location-index]') || [];
+    if (!options.length) return;
+    activeLocationIndex = (index + options.length) % options.length;
+    options.forEach((option, optionIndex) => {
+      const selected = optionIndex === activeLocationIndex;
+      option.classList.toggle('active', selected);
+      option.setAttribute('aria-selected', String(selected));
+    });
+    const activeOption = options[activeLocationIndex];
+    areaInput?.setAttribute('aria-activedescendant', activeOption.id);
+    activeOption.scrollIntoView({ block: 'nearest' });
+  };
+
+  const renderLocationSuggestions = (features, query) => {
+    locationFeatures = features;
+    activeLocationIndex = -1;
+    if (!features.length) {
+      showLocationSuggestionMessage('No matching locations found. You can also click on the map to place the pin.');
+      return;
+    }
+
+    locationSuggestions.innerHTML = features.map((feature, index) => {
+      const place = describePhotonFeature(feature);
+      return `<button type="button" class="location-suggestion" id="locationSuggestion${index}" role="option" aria-selected="false" data-location-index="${index}">
+        <svg class="location-suggestion-pin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+        <span class="location-suggestion-copy"><span class="location-suggestion-name">${highlightLocationMatch(place.primary, query)}</span>${place.secondary ? `<span class="location-suggestion-address">${highlightLocationMatch(place.secondary, query)}</span>` : ''}</span>
+      </button>`;
+    }).join('');
+    locationSuggestions.hidden = false;
+    areaInput?.setAttribute('aria-expanded', 'true');
+    areaInput?.closest('.area-search-wrapper')?.classList.add('has-location-suggestions');
+  };
+
+  const selectLocationSuggestion = (index) => {
+    const feature = locationFeatures[index];
+    const coordinates = feature?.geometry?.coordinates;
+    if (!Array.isArray(coordinates) || coordinates.length < 2) {
+      showLocationSuggestionMessage('This location has no map coordinates. Please choose another result or click on the map.');
+      return;
+    }
+    const place = describePhotonFeature(feature);
+    areaInput.value = place.address;
+    hideLocationSuggestions();
+    if (pickerMap?.setLocation) pickerMap.setLocation(coordinates[1], coordinates[0], 16);
+    showToast(`Location selected: ${place.primary}`, 'success');
+  };
+
+  const searchPhotonLocations = async (query, requestVersion) => {
+    locationSearchController = new AbortController();
+    showLocationSuggestionMessage('Searching locations…', true);
+    try {
+      const endpoint = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=6`;
+      const response = await fetch(endpoint, {
+        headers: { Accept: 'application/json' },
+        signal: locationSearchController.signal
+      });
+      if (!response.ok) throw new Error('Location search request failed.');
+      const data = await response.json();
+      if (requestVersion !== locationSearchVersion || query !== areaInput.value.trim()) return;
+      renderLocationSuggestions(Array.isArray(data.features) ? data.features : [], query);
+    } catch (error) {
+      if (error.name === 'AbortError' || requestVersion !== locationSearchVersion) return;
+      showLocationSuggestionMessage('Location suggestions are unavailable. You can still choose a point on the map.');
+    }
+  };
+
+  if (areaInput && locationSuggestions) {
+    areaInput.addEventListener('input', () => {
+      window.clearTimeout(locationSearchTimer);
+      locationSearchController?.abort();
+      locationSearchController = null;
+      const requestVersion = ++locationSearchVersion;
+      locationFeatures = [];
+      hideLocationSuggestions();
+      const query = areaInput.value.trim();
+      if (query.length < 3) return;
+      locationSearchTimer = window.setTimeout(() => searchPhotonLocations(query, requestVersion), 350);
+    });
+
+    areaInput.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowDown' && !locationSuggestions.hidden && locationFeatures.length) {
+        event.preventDefault();
+        setActiveLocationSuggestion(activeLocationIndex + 1);
+      } else if (event.key === 'ArrowUp' && !locationSuggestions.hidden && locationFeatures.length) {
+        event.preventDefault();
+        setActiveLocationSuggestion(activeLocationIndex < 0 ? locationFeatures.length - 1 : activeLocationIndex - 1);
+      } else if (event.key === 'Enter') {
+        event.preventDefault();
+        if (activeLocationIndex >= 0) selectLocationSuggestion(activeLocationIndex);
+        else handleAreaSearch();
+      } else if (event.key === 'Escape') {
+        hideLocationSuggestions();
+      }
+    });
+
+    locationSuggestions.addEventListener('click', (event) => {
+      const option = event.target.closest('[data-location-index]');
+      if (option) selectLocationSuggestion(Number(option.dataset.locationIndex));
+    });
+
+    locationSuggestions.addEventListener('mousedown', (event) => {
+      if (event.target.closest('[data-location-index]')) event.preventDefault();
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('.area-search-wrapper')) hideLocationSuggestions();
+    });
+  }
 
   async function handleAreaSearch() {
     const query = (areaInput ? areaInput.value : '').trim();
@@ -371,15 +530,6 @@ function initIndexPage() {
     areaBtn.addEventListener('click', (e) => {
       e.preventDefault();
       handleAreaSearch();
-    });
-  }
-
-  if (areaInput) {
-    areaInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        handleAreaSearch();
-      }
     });
   }
 

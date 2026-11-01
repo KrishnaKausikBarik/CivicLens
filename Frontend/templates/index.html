@@ -152,7 +152,8 @@
             <div class="area-search-row" style="display:flex; align-items:stretch; gap:0.5rem; margin-bottom:0.65rem; width:100%;">
               <div class="area-search-wrapper" style="position:relative; flex:1; display:flex; align-items:stretch; height:42px; min-height:42px;">
                 <svg class="area-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; left:0.85rem; top:50%; transform:translateY(-50%); color:var(--color-text-sub); pointer-events:none; z-index:2;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="areaSearchInput" class="form-control area-search-input" placeholder="Search area, landmark, or street name (e.g. Downtown, Market St)..." autocomplete="off" style="height:42px; min-height:42px; box-sizing:border-box; margin:0; padding:0 0.85rem 0 2.35rem; font-size:0.88rem;">
+                <input type="text" id="areaSearchInput" class="form-control area-search-input" placeholder="Search area, landmark, or street name (e.g. Downtown, Market St)..." autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="locationSuggestions" style="height:42px; min-height:42px; box-sizing:border-box; margin:0; padding:0 0.85rem 0 2.35rem; font-size:0.88rem;">
+                <div id="locationSuggestions" class="location-suggestions" hidden></div>
               </div>
               <button type="button" id="areaSearchBtn" class="btn btn-secondary area-locate-btn" style="height:42px; min-height:42px; box-sizing:border-box; margin:0; padding:0 1.15rem; font-size:0.86rem; display:inline-flex; align-items:center; justify-content:center; white-space:nowrap;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -361,18 +362,7 @@
     </div>
   </div>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-container">
-      <div class="footer-info">
-        <div class="brand">Civic<span>Lens</span></div>
-        <p>A smart municipal reporting platform built with flat, accessible design standards.</p>
-      </div>
-      <div class="footer-meta">
-        <p>&copy; 2026 CivicLens Platform. All rights reserved.</p>
-      </div>
-    </div>
-  </footer>
+  {% include "partials/footer.html" %}
 
   {% if reset_mode|default(false) %}
   <div class="modal-backdrop open reset-password-overlay" id="resetPasswordOverlay">
