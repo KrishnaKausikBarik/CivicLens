@@ -12,15 +12,15 @@ CivicLens is a Flask-backed citizen complaint application with a vanilla JavaScr
    pip install -r requirements.txt
    ```
 
-2. Edit the project-root `.env` file. In Supabase, open **Connect** and copy the PostgreSQL connection string. Enter it as `DATABASE_URL`, changing the URL scheme to `postgresql+psycopg://` if the copied value starts with `postgresql://`.
+2. Edit the project-root `.env` file. In Supabase, open **Connect → Transaction pooler** and copy its connection string. This shared pooler endpoint is IPv4-compatible and works from Vercel. Enter it as `DATABASE_URL`, changing the URL scheme to `postgresql+psycopg://` if the copied value starts with `postgresql://`.
 
    Example format (replace with the exact host, username, and database from your Supabase Connect panel):
 
    ```dotenv
-   DATABASE_URL=postgresql+psycopg://postgres:YOUR_DB_PASSWORD@db.YOUR_PROJECT_REF.supabase.co:5432/postgres?sslmode=require
+   DATABASE_URL=postgresql+psycopg://postgres.YOUR_PROJECT_REF:YOUR_DB_PASSWORD@YOUR_POOLER_HOST:6543/postgres?sslmode=require
    ```
 
-   Keep the generated `SECRET_KEY` line already present in `.env`.
+   Replace the pooler host, project-specific username, and password with the exact values from Supabase. Keep the generated `SECRET_KEY` line already present in `.env`. Set this same URL as Vercel's `DATABASE_URL` and redeploy.
 
    Do not send your password in chat or commit `.env`. Percent-encode reserved URL characters in the password. If your local network cannot reach Supabase’s direct IPv6 endpoint, use the exact session-pooler URL from **Connect**. For Vercel later, select the Supabase pooler connection mode suitable for serverless and retain SSL.
 
@@ -47,7 +47,7 @@ The application does not call `create_all`, run migrations, seed demo reports, d
 
 Deploy the repository root as one Vercel project. The root `app.py` exports the Flask WSGI app, `Backend/` and `Frontend/templates/` are bundled with the Python Function, and static assets are published from `public/static/` at the existing `/static/...` URLs. Flask detection itself is automatic; `vercel.json` explicitly includes the dynamically located templates in the function bundle.
 
-Configure these Vercel environment variables for Production (and Preview if desired): `DATABASE_URL`, `SECRET_KEY`, `FLASK_ENV=production`, `COOKIE_SECURE=true`, `ADMIN_USERNAME`, and `ADMIN_PASSWORD_HASH`. Generate a Werkzeug-compatible password hash locally with:
+Configure these Vercel environment variables for Production (and Preview if desired): `DATABASE_URL` using the Supabase **Transaction pooler** (port `6543`), `SECRET_KEY`, `FLASK_ENV=production`, `COOKIE_SECURE=true`, `ADMIN_USERNAME`, and `ADMIN_PASSWORD_HASH`. The direct database hostname resolves to IPv6, which Vercel cannot reach in this deployment. Generate a Werkzeug-compatible password hash locally with:
 
 ```powershell
 python -c "from getpass import getpass; from werkzeug.security import generate_password_hash; print(generate_password_hash(getpass('Admin password: '), method='scrypt'))"
