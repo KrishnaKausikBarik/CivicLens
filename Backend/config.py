@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from sqlalchemy.pool import NullPool
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 PROJECT_DIR = os.path.abspath(os.path.join(BASE_DIR, ".."))
@@ -77,6 +78,12 @@ class ProductionConfig(Config):
     DEBUG = False
     FLASK_ENV = "production"
     SESSION_COOKIE_SECURE = True
+    # Vercel instances may outlive their Supabase connection. Avoid reusing a
+    # stale pooled socket across serverless invocations.
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        **Config.SQLALCHEMY_ENGINE_OPTIONS,
+        "poolclass": NullPool,
+    }
 
 
 config_by_name = {
