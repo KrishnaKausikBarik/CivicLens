@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, session
 from werkzeug.security import check_password_hash
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 import os
 from database import db
 from models.user import User
@@ -42,18 +43,21 @@ def register():
         return jsonify({"success": False, "error": "Passwords do not match."}), 400
 
     normalized_email = email.strip().lower()
-    if User.query.filter_by(email=normalized_email).first():
-        return jsonify({"success": False, "error": "An account with this email already exists."}), 409
-
-    user = User(full_name=full_name.strip(), email=normalized_email)
-    user.set_password(password)
-    db.session.add(user)
     try:
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
         if User.query.filter_by(email=normalized_email).first():
             return jsonify({"success": False, "error": "An account with this email already exists."}), 409
+
+        user = User(full_name=full_name.strip(), email=normalized_email)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"success": False, "error": "An account with this email already exists."}), 409
+    except SQLAlchemyError:
+        db.session.rollback()
+        from flask import current_app
+        current_app.logger.exception("Citizen registration database operation failed")
         return jsonify({"success": False, "error": "Account could not be created."}), 500
     return jsonify({"success": True, "message": "Account created. You can now log in."}), 201
 
