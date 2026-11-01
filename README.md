@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # CivicLens
 
 CivicLens is a Flask-backed citizen complaint application with a vanilla JavaScript frontend. The backend connects to Supabase PostgreSQL through SQLAlchemy and psycopg; database credentials stay in the backend environment.
@@ -52,3 +53,6 @@ The application does not call `create_all`, run migrations, seed demo reports, d
 5. Confirm citizen requests to `/api/admin/reports` and admin requests to `/api/reports` are rejected.
 
 Vercel deployment is not configured or performed by this project update.
+=======
+# CivicLens
+>>>>>>> bc76e2397cd78400f9820c2bf9026ad24c1b2fee
