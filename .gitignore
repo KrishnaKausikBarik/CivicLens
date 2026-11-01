@@ -1,0 +1,23 @@
+﻿# Local secrets and environment settings
+.env
+.env.*
+!.env.example
+Backend/.env
+Backend/.env.*
+!Backend/.env.example
+*.pem
+*.key
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local databases and runtime artifacts
+*.db
+*.sqlite
+*.sqlite3
+Backend/instance/
+instance/

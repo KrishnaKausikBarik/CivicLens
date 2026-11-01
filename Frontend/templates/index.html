@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CivicLens - Citizen Reporting Platform</title>
+  
+  <!-- Font: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Urbanist:ital,wght@0,100..900;1,100..900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- Flat Design Stylesheet -->
+  <!-- Flat Design Stylesheet (Flask url_for + Direct Browser Fallback) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body data-page="index">
+
+  <!-- Top Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="brand">
+        <span class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+        </span>
+        <span class="brand-name">Civic<span>Lens</span></span>
+      </a>
+      <button class="hamburger-btn" id="mobileMenuBtn" aria-label="Toggle navigation menu" aria-expanded="false">
+        <svg class="hamburger-icon-open" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+        <svg class="hamburger-icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <nav class="nav-links" id="navLinks">
+        <a href="index.html" class="nav-link active">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Report Issue
+        </a>
+        <a href="dashboard.html" class="nav-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+          Public Dashboard
+        </a>
+        <a href="#citizenAuthModal" id="citizenAuthBtn" class="nav-link">Citizen Login</a>
+        <a href="#loginModal" id="authBtn" class="nav-link nav-btn-outline">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Admin Portal
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <div class="badge-pill">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Civic Infrastructure Monitoring
+      </div>
+      <h1 class="hero-title">Make Your City Better, One Report at a Time.</h1>
+      <p class="hero-subtitle">
+        Directly alert municipal authorities about road damage, water outages, garbage accumulation, or electrical hazards using geo-tagged tickets.
+      </p>
+      <div class="hero-actions">
+        <a href="#report-section" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Lodge Complaint
+        </a>
+        <a href="dashboard.html" class="btn btn-secondary btn-live-board">
+          <svg class="live-signal-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/>
+            <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/>
+            <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
+            <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/>
+            <path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/>
+          </svg>
+          <span>Live Status Board</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Form & Recent Activity -->
+  <main class="main-container" id="report-section">
+    <div class="grid-layout-two-column">
+      
+      <!-- Complaint Form Card -->
+      <section class="card form-card">
+        <div class="card-header">
+          <div class="header-icon-title">
+            <span class="card-header-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </span>
+            <div>
+              <h2 class="card-title">Submit Incident Report</h2>
+              <p class="card-subtitle">Set accurate incident details and click the map to pin geographic coordinates.</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="citizenRequiredMessage" class="card-subtitle" style="padding:1.25rem;">Please <a href="#citizenAuthModal" id="openCitizenLogin">log in or create a citizen account</a> to submit a complaint.</div>
+        <form id="complaintForm" class="form-body" style="display:none;">
+          <div class="form-group">
+            <label for="title" class="form-label">Issue Title <span class="required">*</span></label>
+            <input type="text" id="title" class="form-control" placeholder="e.g. Hazardous deep pothole near junction" required>
+          </div>
+
+          <div class="form-group">
+            <label for="category" class="form-label">Category <span class="required">*</span></label>
+            <div class="select-wrapper">
+              <select id="category" class="form-control" required>
+                <option value="" disabled selected>Select an infrastructure category</option>
+                <option value="Roads & Footpaths">Roads & Footpaths</option>
+                <option value="Water Supply">Water Supply</option>
+                <option value="Electricity">Electricity & Lighting</option>
+                <option value="Garbage & Waste">Garbage & Sanitation</option>
+                <option value="Drainage & Sewage">Drainage & Sewage</option>
+                <option value="Public Wi-Fi">Public Wi-Fi</option>
+                <option value="Other">Other Issues</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="description" class="form-label">Detailed Description <span class="required">*</span></label>
+            <textarea id="description" class="form-control" rows="4" placeholder="Specify landmark, physical scale, or safety hazards..." required></textarea>
+          </div>
+
+          <!-- Interactive Location Picker -->
+          <div class="form-group">
+                        <div class="map-label-row">
+              <label class="form-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Incident Location Pin <span class="required">*</span>
+              </label>
+              <span class="map-hint">Search area or click on map</span>
+            </div>
+
+            <!-- Area / Locality Search Bar -->
+            <div class="area-search-row" style="display:flex; align-items:stretch; gap:0.5rem; margin-bottom:0.65rem; width:100%;">
+              <div class="area-search-wrapper" style="position:relative; flex:1; display:flex; align-items:stretch; height:42px; min-height:42px;">
+                <svg class="area-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; left:0.85rem; top:50%; transform:translateY(-50%); color:var(--color-text-sub); pointer-events:none; z-index:2;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="areaSearchInput" class="form-control area-search-input" placeholder="Search area, landmark, or street name (e.g. Downtown, Market St)..." autocomplete="off" style="height:42px; min-height:42px; box-sizing:border-box; margin:0; padding:0 0.85rem 0 2.35rem; font-size:0.88rem;">
+              </div>
+              <button type="button" id="areaSearchBtn" class="btn btn-secondary area-locate-btn" style="height:42px; min-height:42px; box-sizing:border-box; margin:0; padding:0 1.15rem; font-size:0.86rem; display:inline-flex; align-items:center; justify-content:center; white-space:nowrap;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <span>Locate Area</span>
+              </button>
+            </div>
+            
+            <div id="pickerMap" class="map-container-sm"></div>
+
+            <div class="coordinate-inputs">
+              <div class="coord-field">
+                <span class="coord-tag">LAT</span>
+                <input type="number" step="any" id="latitude" class="form-control coord-input" placeholder="00.000000" readonly required>
+              </div>
+              <div class="coord-field">
+                <span class="coord-tag">LNG</span>
+                <input type="number" step="any" id="longitude" class="form-control coord-input" placeholder="00.000000" readonly required>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" id="submitBtn" class="btn btn-primary btn-block">
+            <span class="btn-text">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              <span>Submit Complaint</span>
+            </span>
+            <span class="spinner" id="formSpinner" style="display: none;"></span>
+          </button>
+        </form>
+      </section>
+
+      <!-- Recent Reported Issues Sidebar -->
+      <aside class="sidebar-column">
+        <div class="card recent-reports-card">
+          <div class="card-header flex-between">
+            <div class="header-icon-title">
+              <span class="card-header-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </span>
+              <div>
+                <h3 class="card-title">Recent Reports</h3>
+                <p class="card-subtitle">Community log updates</p>
+              </div>
+            </div>
+            <a href="dashboard.html" class="link-action">
+              View all
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
+          </div>
+
+          <div id="recentReportsList" class="activity-feed">
+            <div class="empty-placeholder">
+              <div class="spinner"></div>
+              <p>Fetching active complaints...</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card process-card">
+          <div class="process-card-header">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 16 16 12 12 8"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            Resolution Workflow
+          </div>
+          <div class="timeline-steps">
+            <div class="timeline-step">
+              <span class="step-num">01</span>
+              <div>
+                <strong>Lodge Report</strong>
+                <p>Citizens pinpoint defects with precise geolocation data.</p>
+              </div>
+            </div>
+            <div class="timeline-step">
+              <span class="step-num">02</span>
+              <div>
+                <strong>Triage & Dispatch</strong>
+                <p>Municipal coordinators evaluate and assign field teams.</p>
+              </div>
+            </div>
+            <div class="timeline-step">
+              <span class="step-num">03</span>
+              <div>
+                <strong>Status Verification</strong>
+                <p>Audit and track ticket through full physical resolution.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- Notification Toast Container -->
+    <!-- Edit Complaint Modal -->
+  <div class="modal-backdrop" id="editComplaintModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span class="modal-title">Edit Complaint #<span id="editModalReportId"></span></span>
+        </div>
+        <button type="button" class="modal-close" onclick="closeEditModal()" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="editComplaintForm">
+        <div class="form-body">
+          <input type="hidden" id="editReportId">
+          <div class="form-group">
+            <label class="form-label" for="editTitle">Incident Title <span class="required">*</span></label>
+            <input type="text" id="editTitle" class="form-control" required maxlength="120">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editCategory">Category <span class="required">*</span></label>
+            <select id="editCategory" class="form-control" required>
+              <option value="Roads & Footpaths">Roads & Footpaths</option>
+              <option value="Water Supply">Water Supply</option>
+              <option value="Electricity">Electricity & Lighting</option>
+              <option value="Garbage & Waste">Garbage & Sanitation</option>
+              <option value="Drainage & Sewage">Drainage & Sewage</option>
+              <option value="Public Wi-Fi">Public Wi-Fi</option>
+              <option value="Other">Other Issues</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editDescription">Description <span class="required">*</span></label>
+            <textarea id="editDescription" class="form-control" rows="3" required></textarea>
+          </div>
+          <div class="coordinate-inputs" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+            <div class="form-group">
+              <label class="form-label" for="editLatitude">Latitude</label>
+              <input type="number" step="any" id="editLatitude" class="form-control coord-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="editLongitude">Longitude</label>
+              <input type="number" step="any" id="editLongitude" class="form-control coord-input" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="padding: 1rem 1.25rem; border-top: 1px solid var(--color-border); display: flex; justify-content: flex-end; gap: 0.65rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveEditBtn">
+            <span class="btn-text">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Save Changes</span>
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toastNotification" class="toast-toast" aria-live="polite"></div>
+
+  <div class="modal-backdrop" id="loginModal">
+    <div class="modal-card modal-sm">
+      <div class="modal-header">
+        <div class="modal-title-wrap"><h3 class="modal-title">Admin Login</h3></div>
+        <button class="modal-close" type="button" onclick="closeLoginModal()" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="adminLoginForm" onsubmit="handleLoginSubmit(event)">
+        <div class="modal-body">
+          <p class="modal-subtitle">Sign in to the CivicLens Admin Dashboard.</p>
+          <div class="form-group"><label class="form-label" for="loginUser">Username</label><input type="text" id="loginUser" class="form-control" autocomplete="username" required></div>
+          <div class="form-group"><label class="form-label" for="loginPass">Password</label><input type="password" id="loginPass" class="form-control" autocomplete="current-password" required></div>
+          <p id="loginError" class="form-error" role="alert" aria-live="polite"></p>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeLoginModal()">Cancel</button><button type="submit" class="btn btn-primary">Sign In</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="citizenAuthModal">
+    <div class="modal-card modal-sm">
+      <div class="modal-header"><div class="modal-title-wrap"><h3 class="modal-title" id="citizenAuthTitle">Citizen Login</h3></div><button class="modal-close" type="button" onclick="closeCitizenAuthModal()" aria-label="Close modal">&times;</button></div>
+      <form id="citizenLoginForm">
+        <div class="modal-body">
+          <p id="citizenLoginError" class="form-error" role="alert" aria-live="polite"></p>
+          <div class="form-group"><label class="form-label" for="citizenLoginEmail">Email address</label><input type="email" id="citizenLoginEmail" class="form-control" autocomplete="email" required maxlength="254"></div>
+          <div class="form-group"><label class="form-label" for="citizenLoginPassword">Password</label><input type="password" id="citizenLoginPassword" class="form-control" autocomplete="current-password" required></div>
+          <p class="modal-subtitle">New to CivicLens? <button type="button" class="btn-link" id="showRegister">Create an account</button></p>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeCitizenAuthModal()">Cancel</button><button type="submit" class="btn btn-primary">Login</button></div>
+      </form>
+      <form id="citizenRegisterForm" style="display:none;">
+        <div class="modal-body">
+          <p id="citizenRegisterError" class="form-error" role="alert" aria-live="polite"></p>
+          <div class="form-group"><label class="form-label" for="registerFullName">Full name</label><input type="text" id="registerFullName" class="form-control" autocomplete="name" required maxlength="120"></div>
+          <div class="form-group"><label class="form-label" for="registerEmail">Email address</label><input type="email" id="registerEmail" class="form-control" autocomplete="email" required maxlength="254"></div>
+          <div class="form-group"><label class="form-label" for="registerPassword">Password</label><input type="password" id="registerPassword" class="form-control" autocomplete="new-password" minlength="8" required></div>
+          <div class="form-group"><label class="form-label" for="registerConfirmPassword">Confirm password</label><input type="password" id="registerConfirmPassword" class="form-control" autocomplete="new-password" minlength="8" required></div>
+          <p class="modal-subtitle">Already registered? <button type="button" class="btn-link" id="showLogin">Log in</button></p>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeCitizenAuthModal()">Cancel</button><button type="submit" class="btn btn-primary">Create Account</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-info">
+        <div class="brand">Civic<span>Lens</span></div>
+        <p>A smart municipal reporting platform built with flat, accessible design standards.</p>
+      </div>
+      <div class="footer-meta">
+        <p>&copy; 2026 CivicLens Platform. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Application JS -->
+  <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

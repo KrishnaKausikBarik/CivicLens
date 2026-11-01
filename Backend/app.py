@@ -1,0 +1,141 @@
+import os
+import sys
+import hmac
+import secrets
+from flask import Flask, render_template, jsonify, redirect, session, request
+from flask_cors import CORS
+
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
+from config import config_by_name
+from database import db, init_db
+from routes.reports import reports_bp
+from routes.auth import auth_bp
+
+def create_app(config_name=None):
+    """Application Factory Pattern."""
+    if config_name is None:
+        config_name = os.environ.get("FLASK_ENV", "development").lower()
+
+    FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "Frontend"))
+
+    # Locate templates and static folders inside the frontend folder
+    template_folder = os.path.join(FRONTEND_DIR, "templates") if os.path.exists(os.path.join(FRONTEND_DIR, "templates")) else FRONTEND_DIR
+    static_folder = os.path.join(FRONTEND_DIR, "static") if os.path.exists(os.path.join(FRONTEND_DIR, "static")) else FRONTEND_DIR
+
+    app = Flask(
+        __name__,
+        template_folder=template_folder,
+        static_folder=static_folder,
+        static_url_path="/static",
+        instance_path=os.path.join(BASE_DIR, "instance")
+    )
+
+    # Apply configuration
+    app_config = config_by_name.get(config_name, config_by_name["default"])
+    app.config.from_object(app_config)
+    if not app.config.get("SECRET_KEY"):
+        raise RuntimeError("SECRET_KEY is missing. Set it in the project root .env file.")
+    if not app.config.get("SQLALCHEMY_DATABASE_URI"):
+        from config import get_database_url
+        app.config["SQLALCHEMY_DATABASE_URI"] = get_database_url()
+    if config_name == "production" and not os.environ.get("SECRET_KEY"):
+        raise RuntimeError("SECRET_KEY must be set in the production environment.")
+
+    # Enable CORS for frontend API calls
+    CORS(app, resources={r"/api/*": {"origins": app.config.get("CORS_ORIGINS", [])}}, supports_credentials=True)
+
+    @app.before_request
+    def enforce_csrf_for_api_writes():
+        if request.path.startswith("/api/") and request.method in {"POST", "PUT", "PATCH", "DELETE"}:
+            if session.get("role") not in {"citizen", "admin"} and request.path not in {
+                "/api/register", "/api/login", "/api/auth/admin-login", "/api/auth/login", "/api/logout", "/api/auth/logout"
+            }:
+                return None
+            expected = session.get("csrf_token", "")
+            supplied = request.headers.get("X-CSRF-Token", "")
+            if not expected or not supplied or not hmac.compare_digest(expected, supplied):
+                return jsonify({"success": False, "error": "CSRF validation failed. Refresh and try again."}), 400
+
+    @app.get("/api/csrf")
+    def csrf_token():
+        token = session.get("csrf_token")
+        if not token:
+            token = secrets.token_urlsafe(32)
+            session["csrf_token"] = token
+        return jsonify({"csrf_token": token})
+
+    # Setup database
+    init_db(app)
+
+    # Register blueprints under /api prefix
+    app.register_blueprint(reports_bp, url_prefix="/api")
+    app.register_blueprint(auth_bp, url_prefix="/api")
+
+    @app.get("/api/health/database")
+    def database_health():
+        from sqlalchemy import text
+        try:
+            with db.engine.connect() as connection:
+                connection.execute(text("SELECT 1")).scalar_one()
+            return jsonify({"success": True, "database": "connected"}), 200
+        except Exception:
+            app.logger.exception("Supabase PostgreSQL connectivity check failed")
+            return jsonify({"success": False, "database": "unavailable"}), 503
+
+    # ==========================================
+    # Integrated HTML Page Routes
+    # ==========================================
+    @app.route("/", methods=["GET"])
+    @app.route("/index.html", methods=["GET"])
+    def serve_index():
+        return render_template("index.html")
+
+    @app.route("/dashboard", methods=["GET"])
+    @app.route("/dashboard.html", methods=["GET"])
+    def serve_dashboard():
+        return render_template("dashboard.html")
+
+    @app.route("/citizen", methods=["GET"])
+    @app.route("/citizen/dashboard", methods=["GET"])
+    def serve_citizen_dashboard():
+        if session.get("role") != "citizen":
+            return redirect("/?citizen_login=1")
+        return render_template("citizen.html")
+
+    @app.route("/admin", methods=["GET"])
+    @app.route("/admin.html", methods=["GET"])
+    def serve_admin():
+        if session.get("role") != "admin":
+            return redirect("/?admin_login=1")
+        return render_template("admin.html")
+
+    # ==========================================
+    # Global Error Handlers
+    # ==========================================
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({"success": False, "error": "Requested resource was not found."}), 404
+
+    @app.errorhandler(405)
+    def method_not_allowed(error):
+        return jsonify({"success": False, "error": "HTTP method not allowed for this route."}), 405
+
+    @app.errorhandler(500)
+    def internal_server_error(error):
+        return jsonify({"success": False, "error": "Internal server error."}), 500
+
+    return app
+
+app = create_app()
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    host = os.environ.get("HOST", "127.0.0.1")
+    print("==================================================")
+    print(f" CivicLens Server live at: http://{host}:{port}")
+    print(" Admin login: use the configured CivicLens admin credentials.")
+    print("==================================================")
+    app.run(host=host, port=port, debug=os.environ.get("FLASK_ENV", "development").lower() != "production")
