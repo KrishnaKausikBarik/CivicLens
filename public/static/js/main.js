@@ -119,7 +119,11 @@ const CivicAPI = {
         body: JSON.stringify(reportData)
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Could not submit report.');
+      if (!response.ok) {
+        const error = new Error(data.error || 'Could not submit report.');
+        error.status = response.status;
+        throw error;
+      }
       createdReport = data.report;
     } catch (err) {
       throw err;
@@ -261,11 +265,10 @@ let cachedReports = [];
 function initIndexPage() {
   const form = document.getElementById('complaintForm');
   const pickerMap = MapModule.initPickerMap('pickerMap', 'latitude', 'longitude');
+  let citizenAuthenticated = false;
   fetch(`${API_BASE_URL}/api/me`, { credentials: 'same-origin' }).then(r => r.json()).then(data => {
     if (data.user?.role === 'citizen') {
-      if (form) form.style.display = '';
-      const prompt = document.getElementById('citizenRequiredMessage');
-      if (prompt) prompt.style.display = 'none';
+      citizenAuthenticated = true;
       const authLink = document.getElementById('citizenAuthBtn');
       if (authLink) { authLink.textContent = 'My Complaints'; authLink.href = '/citizen'; }
     }
@@ -382,6 +385,13 @@ function initIndexPage() {
         return;
       }
 
+      if (!citizenAuthenticated) {
+        setCitizenAuthMode('login');
+        document.getElementById('citizenAuthModal')?.classList.add('open');
+        document.getElementById('citizenLoginEmail')?.focus();
+        return;
+      }
+
       const submitBtn = document.getElementById('submitBtn');
       const spinner = document.getElementById('formSpinner');
       const btnText = submitBtn ? submitBtn.querySelector('.btn-text') : null;
@@ -467,7 +477,14 @@ function initIndexPage() {
         loadRecentIssues();
 
       } catch (err) {
-        showToast(err.message || 'Submission error. Please retry.', 'error');
+        if (err.status === 401 || /citizen login required/i.test(err.message || '')) {
+          citizenAuthenticated = false;
+          setCitizenAuthMode('login');
+          document.getElementById('citizenAuthModal')?.classList.add('open');
+          document.getElementById('citizenLoginEmail')?.focus();
+        } else {
+          showToast(err.message || 'Submission error. Please retry.', 'error');
+        }
       } finally {
         if (submitBtn) submitBtn.disabled = false;
         if (spinner) spinner.style.display = 'none';
