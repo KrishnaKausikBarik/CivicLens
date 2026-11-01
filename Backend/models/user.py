@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import BigInteger
 from werkzeug.security import generate_password_hash, check_password_hash
 from database import db
@@ -11,7 +11,13 @@ class User(db.Model):
     full_name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, nullable=True, default=datetime.utcnow, server_default=db.func.current_timestamp())
+    password_version = db.Column(db.BigInteger, nullable=False, default=0, server_default="0")
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=True,
+        default=lambda: datetime.now(timezone.utc),
+        server_default=db.func.current_timestamp(),
+    )
     reports = db.relationship("Report", back_populates="user", lazy="dynamic")
 
     def set_password(self, password):

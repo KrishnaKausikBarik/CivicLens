@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from sqlalchemy.engine import make_url
 from sqlalchemy.pool import NullPool
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -20,6 +21,12 @@ def get_database_url(production=False):
             url = "postgresql+psycopg://" + url[len("postgresql://"):]
         if production and not url.startswith("postgresql+psycopg://"):
             raise RuntimeError("DATABASE_URL must use Supabase PostgreSQL with the psycopg driver in production.")
+        if production:
+            database_url = make_url(url)
+            if not database_url.host or not database_url.host.endswith(".pooler.supabase.com"):
+                raise RuntimeError("Production DATABASE_URL must use the Supabase shared pooler, not a direct database host.")
+            if database_url.port not in {5432, 6543}:
+                raise RuntimeError("Production DATABASE_URL must use the Supabase session pooler (5432) or transaction pooler (6543).")
         return url
 
     if production or os.environ.get("FLASK_ENV", "development").lower() == "production":
@@ -78,11 +85,12 @@ class ProductionConfig(Config):
     DEBUG = False
     FLASK_ENV = "production"
     SESSION_COOKIE_SECURE = True
-    # Vercel instances may outlive their Supabase connection. Avoid reusing a
-    # stale pooled socket across serverless invocations.
+    # Vercel scales requests across short-lived instances. NullPool prevents
+    # SQLAlchemy from retaining client connections between invocations.
+    # Keep psycopg prepared statements disabled for Supabase's transaction pooler.
     SQLALCHEMY_ENGINE_OPTIONS = {
-        **Config.SQLALCHEMY_ENGINE_OPTIONS,
         "poolclass": NullPool,
+        "connect_args": {"sslmode": "require", "prepare_threshold": None},
     }
 
 

@@ -313,6 +313,8 @@
           <div class="form-group"><label class="form-label" for="loginUser">Username</label><input type="text" id="loginUser" class="form-control" autocomplete="username" required></div>
           <div class="form-group"><label class="form-label" for="loginPass">Password</label><input type="password" id="loginPass" class="form-control" autocomplete="current-password" required></div>
           <p id="loginError" class="form-error" role="alert" aria-live="polite"></p>
+          <button type="button" class="btn-link" id="forgotPasswordToggle" aria-expanded="false" aria-controls="forgotPasswordHelp">Forgot password?</button>
+          <p id="forgotPasswordHelp" class="modal-subtitle" hidden>Admin passwords are managed by the site owner. For local access, set a new <code>ADMIN_PASSWORD_HASH</code> in the project root <code>.env</code> and restart the server. For a deployed site, update the deployment environment variable and redeploy.</p>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeLoginModal()">Cancel</button><button type="submit" class="btn btn-primary">Sign In</button></div>
       </form>
@@ -327,6 +329,7 @@
           <p id="citizenLoginError" class="form-error" role="alert" aria-live="polite"></p>
           <div class="form-group"><label class="form-label" for="citizenLoginEmail">Email address</label><input type="email" id="citizenLoginEmail" class="form-control" autocomplete="email" required maxlength="254"></div>
           <div class="form-group"><label class="form-label" for="citizenLoginPassword">Password</label><input type="password" id="citizenLoginPassword" class="form-control" autocomplete="current-password" required></div>
+          <p class="modal-subtitle"><button type="button" class="btn-link" id="citizenForgotPasswordToggle">Forgot password?</button></p>
           <p class="modal-subtitle">New to CivicLens? <button type="button" class="btn-link" id="showRegister">Create an account</button></p>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeCitizenAuthModal()">Cancel</button><button type="submit" class="btn btn-primary">Login</button></div>
@@ -341,6 +344,15 @@
           <p class="modal-subtitle">Already registered? <button type="button" class="btn-link" id="showLogin">Log in</button></p>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeCitizenAuthModal()">Cancel</button><button type="submit" class="btn btn-primary">Create Account</button></div>
+      </form>
+      <form id="citizenForgotPasswordForm" style="display:none;">
+        <div class="modal-body">
+          <p class="modal-subtitle">Enter your registered email address. We’ll send you a password reset link.</p>
+          <div class="form-group"><label class="form-label" for="forgotPasswordEmail">Email address</label><input type="email" id="forgotPasswordEmail" class="form-control" autocomplete="email" required maxlength="254"></div>
+          <p id="forgotPasswordMessage" class="form-error" role="status" aria-live="polite"></p>
+          <button type="button" class="btn-link" id="forgotPasswordBackToLogin">Back to Login</button>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeCitizenAuthModal()">Cancel</button><button type="submit" class="btn btn-primary">Send Reset Link</button></div>
       </form>
     </div>
   </div>

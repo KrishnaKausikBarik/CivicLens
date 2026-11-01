@@ -87,9 +87,6 @@
           <div class="topbar-title">Central Operations Desk</div>
         </div>
         <div class="topbar-actions">
-          <span class="connection-status" id="connectionBadge">
-            <span class="status-indicator"></span> REST API Active
-          </span>
           <button type="button" class="btn btn-secondary btn-sm" id="adminLogoutBtn">Log out</button>
         </div>
       </header>
@@ -306,6 +303,8 @@
             <input type="password" id="loginPass" class="form-control" autocomplete="current-password" required>
           </div>
           <p id="loginError" class="form-error" role="alert" aria-live="polite"></p>
+          <button type="button" class="btn-link" id="forgotPasswordToggle" aria-expanded="false" aria-controls="forgotPasswordHelp">Forgot password?</button>
+          <p id="forgotPasswordHelp" class="modal-subtitle" hidden>Admin passwords are managed by the site owner. For local access, set a new <code>ADMIN_PASSWORD_HASH</code> in the project root <code>.env</code> and restart the server. For a deployed site, update the deployment environment variable and redeploy.</p>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeLoginModal()">Cancel</button>

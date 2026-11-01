@@ -1006,6 +1006,13 @@ window.closeLoginModal = function() {
   document.getElementById('loginModal')?.classList.remove('open');
 };
 
+document.getElementById('forgotPasswordToggle')?.addEventListener('click', (event) => {
+  const help = document.getElementById('forgotPasswordHelp');
+  if (!help) return;
+  help.hidden = !help.hidden;
+  event.currentTarget.setAttribute('aria-expanded', String(!help.hidden));
+});
+
 window.handleLoginSubmit = async function(e) {
   e.preventDefault();
   const emailInput = document.getElementById('loginUser');
@@ -1043,9 +1050,18 @@ window.closeCitizenAuthModal = function() {
 
 function setCitizenAuthMode(mode) {
   const registering = mode === 'register';
-  document.getElementById('citizenLoginForm').style.display = registering ? 'none' : '';
+  const recovering = mode === 'forgot';
+  document.getElementById('citizenLoginForm').style.display = registering || recovering ? 'none' : '';
   document.getElementById('citizenRegisterForm').style.display = registering ? '' : 'none';
-  document.getElementById('citizenAuthTitle').textContent = registering ? 'Create Citizen Account' : 'Citizen Login';
+  document.getElementById('citizenForgotPasswordForm').style.display = recovering ? '' : 'none';
+  document.getElementById('citizenAuthTitle').textContent = registering
+    ? 'Create Citizen Account'
+    : recovering ? 'Forgot Your Password?' : 'Citizen Login';
+  if (recovering) {
+    document.getElementById('forgotPasswordEmail').value = document.getElementById('citizenLoginEmail').value;
+    document.getElementById('forgotPasswordMessage').textContent = '';
+    document.getElementById('forgotPasswordMessage').style.color = '';
+  }
 }
 
 document.getElementById('citizenAuthBtn')?.addEventListener('click', e => {
@@ -1061,6 +1077,27 @@ document.getElementById('openCitizenLogin')?.addEventListener('click', e => {
 });
 document.getElementById('showRegister')?.addEventListener('click', () => setCitizenAuthMode('register'));
 document.getElementById('showLogin')?.addEventListener('click', () => setCitizenAuthMode('login'));
+document.getElementById('citizenForgotPasswordToggle')?.addEventListener('click', () => setCitizenAuthMode('forgot'));
+document.getElementById('forgotPasswordBackToLogin')?.addEventListener('click', () => setCitizenAuthMode('login'));
+
+document.getElementById('citizenForgotPasswordForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const message = document.getElementById('forgotPasswordMessage');
+  message.textContent = '';
+  message.style.color = '';
+  try {
+    const response = await csrfFetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: document.getElementById('forgotPasswordEmail').value })
+    });
+    const data = await readApiResponse(response);
+    message.textContent = data.message;
+    message.style.color = '#047857';
+  } catch (error) {
+    message.textContent = error.message || 'Unable to send the reset link. Please try again.';
+  }
+});
 
 document.getElementById('citizenLoginForm')?.addEventListener('submit', async e => {
   e.preventDefault();
@@ -1106,6 +1143,80 @@ document.getElementById('citizenRegisterForm')?.addEventListener('submit', async
     document.getElementById('citizenLoginError').style.color = '#047857';
   } catch (err) { error.textContent = err.message; }
 });
+
+if (document.body.dataset.page === 'reset-password') {
+  const resetForm = document.getElementById('resetPasswordForm');
+  const status = document.getElementById('resetPasswordStatus');
+  const done = document.getElementById('resetPasswordDone');
+  const resetUrl = new URL(window.location.href);
+  const resetToken = new URLSearchParams(resetUrl.hash.slice(1)).get('token') || '';
+  window.history.replaceState(null, '', '/reset-password');
+
+  document.querySelectorAll('[data-toggle-password]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const input = document.getElementById(button.dataset.togglePassword);
+      const showing = input.type === 'password';
+      input.type = showing ? 'text' : 'password';
+      button.textContent = showing ? 'Hide password' : 'Show password';
+      button.setAttribute('aria-pressed', String(showing));
+    });
+  });
+
+  const showResetError = (message) => {
+    status.textContent = message;
+    status.style.color = '';
+    done.hidden = false;
+  };
+
+  (async () => {
+    if (!resetToken) {
+      showResetError('This reset link is invalid or has expired.');
+      return;
+    }
+    try {
+      const response = await csrfFetch(`${API_BASE_URL}/api/auth/validate-reset-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: resetToken })
+      });
+      await readApiResponse(response);
+      status.hidden = true;
+      resetForm.hidden = false;
+    } catch (error) {
+      showResetError(error.message || 'This reset link is invalid or has expired.');
+    }
+  })();
+
+  resetForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const password = document.getElementById('newPassword').value;
+    const confirmation = document.getElementById('confirmNewPassword').value;
+    status.hidden = false;
+    status.style.color = '';
+    if (password.length < 8 || password.length > 256) {
+      status.textContent = 'Password must be between 8 and 256 characters.';
+      return;
+    }
+    if (password !== confirmation) {
+      status.textContent = 'Passwords do not match.';
+      return;
+    }
+    try {
+      const response = await csrfFetch(`${API_BASE_URL}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: resetToken, password, confirm_password: confirmation })
+      });
+      const data = await readApiResponse(response);
+      resetForm.hidden = true;
+      status.textContent = data.message;
+      status.style.color = '#047857';
+      done.hidden = false;
+    } catch (error) {
+      status.textContent = error.message || 'Unable to reset your password. Please try again.';
+    }
+  });
+}
 
 if (new URLSearchParams(window.location.search).has('citizen_login')) {
   setCitizenAuthMode('login');

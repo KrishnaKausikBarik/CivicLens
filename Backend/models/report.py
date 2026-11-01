@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import BigInteger
 from database import db
 
@@ -28,7 +28,12 @@ class Report(db.Model):
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(30), nullable=True, default="Pending", server_default="Pending", index=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, server_default=db.func.current_timestamp(), nullable=True)
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        server_default=db.func.current_timestamp(),
+        nullable=True,
+    )
     user_id = db.Column(
         BigInteger().with_variant(db.Integer, "sqlite"),
         db.ForeignKey("users.id", name="fk_reports_user_id_users", ondelete="RESTRICT"),

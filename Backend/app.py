@@ -2,7 +2,7 @@ import os
 import sys
 import hmac
 import secrets
-from flask import Flask, render_template, jsonify, redirect, session, request
+from flask import Flask, render_template, jsonify, redirect, session, request, make_response
 from flask_cors import CORS
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -54,7 +54,7 @@ def create_app(config_name=None):
     @app.before_request
     def enforce_csrf_for_api_writes():
         if request.path.startswith("/api/") and request.method in {"POST", "PUT", "PATCH", "DELETE"}:
-            if session.get("role") not in {"citizen", "admin"} and request.path not in {
+            if session.get("role") not in {"citizen", "admin"} and request.path in {
                 "/api/register", "/api/login", "/api/auth/admin-login", "/api/auth/login", "/api/logout", "/api/auth/logout"
             }:
                 return None
@@ -110,6 +110,13 @@ def create_app(config_name=None):
             return redirect("/?citizen_login=1")
         return render_template("citizen.html")
 
+    @app.get("/reset-password")
+    def serve_reset_password():
+        response = make_response(render_template("reset_password.html"))
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        return response
+
     @app.route("/admin", methods=["GET"])
     @app.route("/admin.html", methods=["GET"])
     def serve_admin():
@@ -137,10 +144,17 @@ def create_app(config_name=None):
 app = create_app()
 
 if __name__ == "__main__":
+    from utils.request_logging import RedactingWSGIRequestHandler
+
     port = int(os.environ.get("PORT", 5000))
     host = os.environ.get("HOST", "127.0.0.1")
     print("==================================================")
     print(f" CivicLens Server live at: http://{host}:{port}")
     print(" Admin login: use the configured CivicLens admin credentials.")
     print("==================================================")
-    app.run(host=host, port=port, debug=os.environ.get("FLASK_ENV", "development").lower() != "production")
+    app.run(
+        host=host,
+        port=port,
+        debug=os.environ.get("FLASK_ENV", "development").lower() != "production",
+        request_handler=RedactingWSGIRequestHandler,
+    )
