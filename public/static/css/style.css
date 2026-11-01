@@ -1718,9 +1718,7 @@ body.reset-password-mode {
 
 .reset-password-overlay {
   z-index: 3000;
-  background-color: rgba(15, 23, 42, 0.48);
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.22);
 }
 
 .reset-password-overlay .reset-password-card {

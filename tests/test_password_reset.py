@@ -351,7 +351,10 @@ class PasswordResetTests(unittest.TestCase):
         self.assertEqual(javascript.status_code, 200)
         self.assertIn(b"--color-primary", css.data)
         self.assertIn(b"width: min(100%, 470px)", css.data)
-        self.assertIn(b"backdrop-filter: blur(4px)", css.data)
+        reset_overlay_css = css.data.split(b".reset-password-overlay {", 1)[1].split(b"}", 1)[0]
+        self.assertIn(b"background: rgba(0, 0, 0, 0.22)", reset_overlay_css)
+        self.assertNotIn(b"backdrop-filter", reset_overlay_css)
+        self.assertNotIn(b"filter:", reset_overlay_css)
         self.assertIn(b"resetUrl.hash.slice(1)", javascript.data)
         project_root = Path(__file__).resolve().parents[1]
         self.assertEqual(css.data, (project_root / "Frontend" / "static" / "css" / "style.css").read_bytes())
