@@ -1173,7 +1173,6 @@ if (document.body.dataset.page === 'reset-password') {
     status.textContent = message;
     status.classList.remove('reset-success');
     status.classList.add('form-error');
-    done.hidden = false;
   };
 
   (async () => {

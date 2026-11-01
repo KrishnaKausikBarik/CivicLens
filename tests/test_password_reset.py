@@ -196,6 +196,7 @@ class PasswordResetTests(unittest.TestCase):
         self.assertIn(b"Show password", response.data)
         self.assertIn(b"Return to login", response.data)
         self.assertIn(b'name="viewport"', response.data)
+        self.assertIn(b'class="footer reset-page-footer"', response.data)
 
     def test_reset_frontend_reads_fragment_cleans_history_and_posts_token(self):
         script = (Path(__file__).resolve().parents[1] / "Frontend" / "static" / "js" / "main.js").read_text(encoding="utf-8")
@@ -337,7 +338,12 @@ class PasswordResetTests(unittest.TestCase):
         self.assertEqual(css.status_code, 200)
         self.assertEqual(javascript.status_code, 200)
         self.assertIn(b"--color-primary", css.data)
+        self.assertIn(b"width: min(100%, 470px)", css.data)
+        self.assertIn(b"justify-content: center", css.data)
         self.assertIn(b"resetUrl.hash.slice(1)", javascript.data)
+        project_root = Path(__file__).resolve().parents[1]
+        self.assertEqual(css.data, (project_root / "Frontend" / "static" / "css" / "style.css").read_bytes())
+        self.assertEqual(javascript.data, (project_root / "Frontend" / "static" / "js" / "main.js").read_bytes())
         css.close()
         javascript.close()
 

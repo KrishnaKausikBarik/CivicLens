@@ -1171,8 +1171,8 @@ if (document.body.dataset.page === 'reset-password') {
 
   const showResetError = (message) => {
     status.textContent = message;
-    status.style.color = '';
-    done.hidden = false;
+    status.classList.remove('reset-success');
+    status.classList.add('form-error');
   };
 
   (async () => {
@@ -1199,13 +1199,15 @@ if (document.body.dataset.page === 'reset-password') {
     const password = document.getElementById('newPassword').value;
     const confirmation = document.getElementById('confirmNewPassword').value;
     status.hidden = false;
-    status.style.color = '';
+    status.classList.remove('reset-success', 'form-error');
     if (password.length < 8 || password.length > 256) {
       status.textContent = 'Password must be between 8 and 256 characters.';
+      status.classList.add('form-error');
       return;
     }
     if (password !== confirmation) {
       status.textContent = 'Passwords do not match.';
+      status.classList.add('form-error');
       return;
     }
     try {
@@ -1217,10 +1219,13 @@ if (document.body.dataset.page === 'reset-password') {
       const data = await readApiResponse(response);
       resetForm.hidden = true;
       status.textContent = data.message;
-      status.style.color = '#047857';
+      status.classList.remove('form-error');
+      status.classList.add('reset-success');
       done.hidden = false;
+      window.setTimeout(() => window.location.assign('/?citizen_login=1'), 2500);
     } catch (error) {
       status.textContent = error.message || 'Unable to reset your password. Please try again.';
+      status.classList.add('form-error');
     }
   });
 }
