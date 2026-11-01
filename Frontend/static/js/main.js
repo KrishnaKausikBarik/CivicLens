@@ -264,10 +264,11 @@ function initIndexPage() {
   fetch(`${API_BASE_URL}/api/me`, { credentials: 'same-origin' }).then(r => r.json()).then(data => {
     if (data.user?.role === 'citizen') {
       if (form) form.style.display = '';
-      const prompt = document.getElementById('citizenRequiredMessage');
-      if (prompt) prompt.style.display = 'none';
       const authLink = document.getElementById('citizenAuthBtn');
       if (authLink) { authLink.textContent = 'My Complaints'; authLink.href = '/citizen'; }
+    } else {
+      setCitizenAuthMode('login');
+      document.getElementById('citizenAuthModal')?.classList.add('open');
     }
   }).catch(() => {});
 
