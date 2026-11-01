@@ -10,7 +10,7 @@ if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
 from config import config_by_name
-from database import db, init_db
+from database import db
 from routes.reports import reports_bp
 from routes.auth import auth_bp
 
@@ -21,14 +21,15 @@ def create_app(config_name=None):
 
     FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "Frontend"))
 
-    # Locate templates and static folders inside the frontend folder
+    # Templates are bundled with the function. Static assets are published from
+    # public/static by Vercel while retaining Flask's /static URL convention.
     template_folder = os.path.join(FRONTEND_DIR, "templates") if os.path.exists(os.path.join(FRONTEND_DIR, "templates")) else FRONTEND_DIR
-    static_folder = os.path.join(FRONTEND_DIR, "static") if os.path.exists(os.path.join(FRONTEND_DIR, "static")) else FRONTEND_DIR
+    public_static = os.path.abspath(os.path.join(BASE_DIR, "..", "public", "static"))
 
     app = Flask(
         __name__,
         template_folder=template_folder,
-        static_folder=static_folder,
+        static_folder=public_static,
         static_url_path="/static",
         instance_path=os.path.join(BASE_DIR, "instance")
     )
@@ -36,13 +37,16 @@ def create_app(config_name=None):
     # Apply configuration
     app_config = config_by_name.get(config_name, config_by_name["default"])
     app.config.from_object(app_config)
+    from config import get_database_url
+    app.config["SQLALCHEMY_DATABASE_URI"] = get_database_url(production=config_name == "production")
     if not app.config.get("SECRET_KEY"):
         raise RuntimeError("SECRET_KEY is missing. Set it in the project root .env file.")
-    if not app.config.get("SQLALCHEMY_DATABASE_URI"):
-        from config import get_database_url
-        app.config["SQLALCHEMY_DATABASE_URI"] = get_database_url()
     if config_name == "production" and not os.environ.get("SECRET_KEY"):
         raise RuntimeError("SECRET_KEY must be set in the production environment.")
+    if config_name == "production" and (not os.environ.get("ADMIN_USERNAME") or not os.environ.get("ADMIN_PASSWORD_HASH")):
+        raise RuntimeError("ADMIN_USERNAME and ADMIN_PASSWORD_HASH must be set in the production environment.")
+    if config_name == "production":
+        app.config["SESSION_COOKIE_SECURE"] = True
 
     # Enable CORS for frontend API calls
     CORS(app, resources={r"/api/*": {"origins": app.config.get("CORS_ORIGINS", [])}}, supports_credentials=True)
@@ -67,8 +71,9 @@ def create_app(config_name=None):
             session["csrf_token"] = token
         return jsonify({"csrf_token": token})
 
-    # Setup database
-    init_db(app)
+    # Initialize the extension without opening a connection during module import.
+    # Serverless cold starts should not fail until a request actually needs DB access.
+    db.init_app(app)
 
     # Register blueprints under /api prefix
     app.register_blueprint(reports_bp, url_prefix="/api")

@@ -1,4 +1,5 @@
 from datetime import datetime
+from sqlalchemy import BigInteger
 from werkzeug.security import generate_password_hash, check_password_hash
 from database import db
 
@@ -6,11 +7,11 @@ from database import db
 class User(db.Model):
     __tablename__ = "users"
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    full_name = db.Column(db.Text, nullable=False)
-    email = db.Column(db.Text, unique=True, nullable=False, index=True)
+    id = db.Column(BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True, autoincrement=True)
+    full_name = db.Column(db.String(150), nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, server_default=db.func.current_timestamp())
+    created_at = db.Column(db.DateTime, nullable=True, default=datetime.utcnow, server_default=db.func.current_timestamp())
     reports = db.relationship("Report", back_populates="user", lazy="dynamic")
 
     def set_password(self, password):

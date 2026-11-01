@@ -1,13 +1,20 @@
 from flask import Blueprint, jsonify, request, session
 from werkzeug.security import check_password_hash
+import os
 from database import db
 from models.user import User
 from middleware.auth_middleware import admin_session_required
 from utils.validators import validate_email
 
 auth_bp = Blueprint("auth_bp", __name__)
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD_HASH = "scrypt:32768:8:1$wAEsdO0Ugjh57MKM$e2ef821bc17ef649165059b331b71a0ce4057c80398469e0c21e29175b47e0dd4f0034609ac262ca651afea86a7deb1fe398207990fe397a3792bd7ad826e941"
+
+
+def _admin_username():
+    return os.environ.get("ADMIN_USERNAME", "admin")
+
+
+def _admin_password_hash():
+    return os.environ.get("ADMIN_PASSWORD_HASH", "")
 
 
 def _json_body():
@@ -79,17 +86,19 @@ def admin_login():
     password = data.get("password")
     if not isinstance(username, str) or not isinstance(password, str):
         return jsonify({"success": False, "error": "Invalid username or password"}), 401
-    if username.strip() != ADMIN_USERNAME or not check_password_hash(ADMIN_PASSWORD_HASH, password):
+    admin_username = _admin_username()
+    password_hash = _admin_password_hash()
+    if not password_hash or username.strip() != admin_username or not check_password_hash(password_hash, password):
         return jsonify({"success": False, "error": "Invalid username or password"}), 401
     session.clear()
     session["role"] = "admin"
-    return jsonify({"success": True, "user": {"username": ADMIN_USERNAME, "role": "admin"}}), 200
+    return jsonify({"success": True, "user": {"username": admin_username, "role": "admin"}}), 200
 
 
 @auth_bp.route("/me", methods=["GET"])
 def current_user():
     if session.get("role") == "admin":
-        return jsonify({"success": True, "user": {"username": ADMIN_USERNAME, "role": "admin"}}), 200
+        return jsonify({"success": True, "user": {"username": _admin_username(), "role": "admin"}}), 200
     if session.get("role") == "citizen":
         user = User.query.get(session.get("user_id"))
         if user:
@@ -107,4 +116,4 @@ def logout():
 @auth_bp.route("/auth/session", methods=["GET"])
 @admin_session_required
 def admin_session():
-    return jsonify({"success": True, "user": {"username": ADMIN_USERNAME, "role": "admin"}}), 200
+    return jsonify({"success": True, "user": {"username": _admin_username(), "role": "admin"}}), 200

@@ -1,4 +1,3 @@
-from datetime import datetime
 from flask import Blueprint, jsonify, request
 from sqlalchemy import String, cast, or_
 from sqlalchemy.orm import joinedload
@@ -114,7 +113,6 @@ def update_admin_report_status(report_id):
     if not valid:
         return jsonify({"success": False, "error": error}), 400
     report.status = data["status"]
-    report.updated_at = datetime.utcnow()
     db.session.commit()
     return jsonify({"success": True, "report": _admin_report_dict(report)}), 200
 
@@ -151,7 +149,6 @@ def update_report(current_user, report_id):
         return jsonify({"success": False, "error": "Coordinates must be numeric."}), 400
     if not (-90 <= report.latitude <= 90 and -180 <= report.longitude <= 180):
         return jsonify({"success": False, "error": "Coordinates are out of range."}), 400
-    report.updated_at = datetime.utcnow()
     db.session.commit()
     return jsonify({"success": True, "report": report.to_dict()}), 200
 
@@ -167,7 +164,6 @@ def update_report_status(report_id):
     if not valid:
         return jsonify({"success": False, "error": error}), 400
     report.status = data["status"]
-    report.updated_at = datetime.utcnow()
     db.session.commit()
     return jsonify({"success": True, "report": _admin_report_dict(report)}), 200
 

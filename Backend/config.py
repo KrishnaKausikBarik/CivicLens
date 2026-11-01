@@ -10,14 +10,19 @@ if os.environ.get("FLASK_ENV", "development").lower() != "production":
     load_dotenv(os.path.join(BASE_DIR, ".env"), override=False)
 
 
-def get_database_url():
+def get_database_url(production=False):
     url = (os.environ.get("DATABASE_URL") or "").strip()
     if url and not any(value in url for value in ("YOUR_DB_PASSWORD", "YOUR_PROJECT_REF", "[YOUR-PASSWORD]", "[PROJECT-REF]")):
         if url.startswith("postgres://"):
             url = "postgresql+psycopg://" + url[len("postgres://"):]
         elif url.startswith("postgresql://") and not url.startswith("postgresql+psycopg://"):
             url = "postgresql+psycopg://" + url[len("postgresql://"):]
+        if production and not url.startswith("postgresql+psycopg://"):
+            raise RuntimeError("DATABASE_URL must use Supabase PostgreSQL with the psycopg driver in production.")
         return url
+
+    if production or os.environ.get("FLASK_ENV", "development").lower() == "production":
+        raise RuntimeError("DATABASE_URL must be set to the Supabase PostgreSQL connection string in production.")
 
     # Fallback to local SQLite instance storage
     instance_dir = os.path.join(BASE_DIR, "instance")
@@ -29,8 +34,8 @@ def get_database_url():
 _db_url = get_database_url()
 
 class Config:
-    """Flask settings supporting both Supabase PostgreSQL and local SQLite fallback."""
-    SECRET_KEY = os.environ.get("SECRET_KEY") or "civiclens-super-secure-production-secret-key-change-me-32bytes"
+    """Flask settings supporting Supabase PostgreSQL and local-development SQLite."""
+    SECRET_KEY = os.environ.get("SECRET_KEY")
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "false").lower() == "true"

@@ -1,4 +1,5 @@
 from datetime import datetime
+from sqlalchemy import BigInteger
 from database import db
 
 class Report(db.Model):
@@ -20,17 +21,20 @@ class Report(db.Model):
         "Resolved"
     ]
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    title = db.Column(db.String(150), nullable=False)
-    category = db.Column(db.String(80), nullable=False, index=True)
+    id = db.Column(BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True, autoincrement=True)
+    title = db.Column(db.String(200), nullable=False)
+    category = db.Column(db.String(100), nullable=False, index=True)
     description = db.Column(db.Text, nullable=False)
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
-    status = db.Column(db.String(30), nullable=False, default="Pending", index=True)
-    admin_notes = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id", name="fk_reports_user_id_users", ondelete="SET NULL"), nullable=True, index=True)
+    status = db.Column(db.String(30), nullable=True, default="Pending", server_default="Pending", index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, server_default=db.func.current_timestamp(), nullable=True)
+    user_id = db.Column(
+        BigInteger().with_variant(db.Integer, "sqlite"),
+        db.ForeignKey("users.id", name="fk_reports_user_id_users", ondelete="RESTRICT"),
+        nullable=True,
+        index=True,
+    )
     user = db.relationship("User", back_populates="reports")
 
     def to_dict(self):
@@ -43,9 +47,11 @@ class Report(db.Model):
             "latitude": round(float(self.latitude), 6),
             "longitude": round(float(self.longitude), 6),
             "status": self.status,
-            "admin_notes": self.admin_notes,
-            "created_at": self.created_at.strftime("%Y-%m-%d %H:%M"),
-            "updated_at": self.updated_at.strftime("%Y-%m-%d %H:%M")
+            # Older database records may predate timestamps/status values. The
+            # existing Supabase schema has no admin_notes or updated_at column.
+            "admin_notes": None,
+            "created_at": self.created_at.strftime("%Y-%m-%d %H:%M") if self.created_at else None,
+            "updated_at": self.created_at.strftime("%Y-%m-%d %H:%M") if self.created_at else None
         }
 
     def __repr__(self):
