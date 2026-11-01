@@ -113,8 +113,9 @@ const CivicAPI = {
 
   async getCitizenReports() {
     const response = await fetch(`${API_BASE_URL}/api/reports`, { credentials: 'same-origin' });
-    if (!response.ok) throw new Error('Citizen login required.');
-    return response.json();
+    const reports = await readApiResponse(response);
+    if (!Array.isArray(reports)) throw new Error('Unexpected response while loading complaints.');
+    return reports;
   },
 
   async getAdminReports() {
@@ -934,8 +935,14 @@ async function initCitizenPage() {
         </tr>`).join('');
     }
     if (MapModule.initOverviewMap) MapModule.initOverviewMap('citizenReportsMap', reports);
-  } catch (_) {
-    if (tableBody) tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Sign in to view your complaints.</td></tr>';
+  } catch (error) {
+    if (!tableBody) return;
+    if (/citizen login required|citizen login expired/i.test(error.message || '')) {
+      tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Your session has expired. <a href="/?citizen_login=1">Sign in again</a> to view your complaints.</td></tr>';
+    } else {
+      console.error('Unable to load the citizen complaint list.', error);
+      tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Your complaints could not be loaded. Please refresh the page to try again.</td></tr>';
+    }
   }
 }
 

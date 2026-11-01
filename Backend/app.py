@@ -2,7 +2,7 @@ import os
 import sys
 import hmac
 import secrets
-from flask import Flask, render_template, jsonify, redirect, session, request, make_response
+from flask import Flask, render_template, jsonify, redirect, session, request, make_response, send_from_directory
 from flask_cors import CORS
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -20,6 +20,7 @@ def create_app(config_name=None):
         config_name = os.environ.get("FLASK_ENV", "development").lower()
 
     FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "Frontend"))
+    PUBLIC_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "public"))
 
     # Templates are bundled with the function. Static assets are published from
     # public/static by Vercel while retaining Flask's /static URL convention.
@@ -70,6 +71,16 @@ def create_app(config_name=None):
             token = secrets.token_urlsafe(32)
             session["csrf_token"] = token
         return jsonify({"csrf_token": token})
+
+    def serve_public_icon(filename):
+        return send_from_directory(PUBLIC_DIR, filename, max_age=86400)
+
+    for icon_name in ("favicon.ico", "favicon.svg", "favicon-32x32.png", "apple-touch-icon.png"):
+        app.add_url_rule(
+            f"/{icon_name}",
+            endpoint=f"serve_{icon_name.replace('-', '_').replace('.', '_')}",
+            view_func=lambda asset=icon_name: serve_public_icon(asset),
+        )
 
     # Initialize the extension without opening a connection during module import.
     # Serverless cold starts should not fail until a request actually needs DB access.

@@ -113,8 +113,9 @@ const CivicAPI = {
 
   async getCitizenReports() {
     const response = await fetch(`${API_BASE_URL}/api/reports`, { credentials: 'same-origin' });
-    if (!response.ok) throw new Error('Citizen login required.');
-    return response.json();
+    const reports = await readApiResponse(response);
+    if (!Array.isArray(reports)) throw new Error('Unexpected response while loading complaints.');
+    return reports;
   },
 
   async getAdminReports() {
@@ -934,8 +935,14 @@ async function initCitizenPage() {
         </tr>`).join('');
     }
     if (MapModule.initOverviewMap) MapModule.initOverviewMap('citizenReportsMap', reports);
-  } catch (_) {
-    if (tableBody) tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Sign in to view your complaints.</td></tr>';
+  } catch (error) {
+    if (!tableBody) return;
+    if (/citizen login required|citizen login expired/i.test(error.message || '')) {
+      tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Your session has expired. <a href="/?citizen_login=1">Sign in again</a> to view your complaints.</td></tr>';
+    } else {
+      console.error('Unable to load the citizen complaint list.', error);
+      tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Your complaints could not be loaded. Please refresh the page to try again.</td></tr>';
+    }
   }
 }
 
@@ -1164,7 +1171,8 @@ if (document.body.dataset.page === 'reset-password') {
 
   const showResetError = (message) => {
     status.textContent = message;
-    status.style.color = '';
+    status.classList.remove('reset-success');
+    status.classList.add('form-error');
     done.hidden = false;
   };
 
@@ -1192,13 +1200,15 @@ if (document.body.dataset.page === 'reset-password') {
     const password = document.getElementById('newPassword').value;
     const confirmation = document.getElementById('confirmNewPassword').value;
     status.hidden = false;
-    status.style.color = '';
+    status.classList.remove('reset-success', 'form-error');
     if (password.length < 8 || password.length > 256) {
       status.textContent = 'Password must be between 8 and 256 characters.';
+      status.classList.add('form-error');
       return;
     }
     if (password !== confirmation) {
       status.textContent = 'Passwords do not match.';
+      status.classList.add('form-error');
       return;
     }
     try {
@@ -1210,10 +1220,13 @@ if (document.body.dataset.page === 'reset-password') {
       const data = await readApiResponse(response);
       resetForm.hidden = true;
       status.textContent = data.message;
-      status.style.color = '#047857';
+      status.classList.remove('form-error');
+      status.classList.add('reset-success');
       done.hidden = false;
+      window.setTimeout(() => window.location.assign('/?citizen_login=1'), 2500);
     } catch (error) {
       status.textContent = error.message || 'Unable to reset your password. Please try again.';
+      status.classList.add('form-error');
     }
   });
 }

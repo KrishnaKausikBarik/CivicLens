@@ -1,5 +1,6 @@
 import hashlib
 import os
+import struct
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -190,12 +191,18 @@ class PasswordResetTests(unittest.TestCase):
         self.assertEqual(response.headers["Cache-Control"], "no-store")
         self.assertEqual(response.headers["Referrer-Policy"], "no-referrer")
         self.assertIn(b"resetPasswordForm", response.data)
+        self.assertIn(b"Create New Password", response.data)
+        self.assertIn(b'class="navbar"', response.data)
+        self.assertIn(b"Show password", response.data)
+        self.assertIn(b"Return to login", response.data)
+        self.assertIn(b'name="viewport"', response.data)
 
     def test_reset_frontend_reads_fragment_cleans_history_and_posts_token(self):
         script = (Path(__file__).resolve().parents[1] / "Frontend" / "static" / "js" / "main.js").read_text(encoding="utf-8")
         self.assertIn("new URLSearchParams(resetUrl.hash.slice(1)).get('token')", script)
         self.assertIn("window.history.replaceState(null, '', '/reset-password')", script)
         self.assertIn("body: JSON.stringify({ token: resetToken })", script)
+        self.assertIn("window.location.assign('/?citizen_login=1')", script)
 
     def test_local_access_log_redacts_reset_token(self):
         path = "/reset-password?token=secret-token&source=email"
@@ -222,6 +229,11 @@ class PasswordResetTests(unittest.TestCase):
                 self.assertEqual(type(db.engine.pool).__name__, "NullPool")
                 self.assertEqual(db.engine.url.query.get("sslmode"), "require")
                 db.engine.dispose()
+            with production_app.test_client() as production_client:
+                reset_page = production_client.get("/reset-password")
+                self.assertEqual(reset_page.status_code, 200)
+                self.assertIn(b"Create New Password", reset_page.data)
+                self.assertIn(b"reset-page-main", reset_page.data)
 
     def test_production_rejects_direct_database_and_sqlite_urls(self):
         for url in (
@@ -301,6 +313,9 @@ class PasswordResetTests(unittest.TestCase):
         }, headers={"X-CSRF-Token": citizen.get("/api/csrf").get_json()["csrf_token"]})
         self.assertEqual(complaint.status_code, 201)
         report_id = complaint.get_json()["report"]["id"]
+        my_complaints = citizen.get("/api/reports")
+        self.assertEqual(my_complaints.status_code, 200)
+        self.assertEqual([report["id"] for report in my_complaints.get_json()], [report_id])
 
         admin = self.app.test_client()
         admin_hash = generate_password_hash("test-admin-password")
@@ -325,6 +340,30 @@ class PasswordResetTests(unittest.TestCase):
         self.assertIn(b"resetUrl.hash.slice(1)", javascript.data)
         css.close()
         javascript.close()
+
+    def test_favicon_assets_are_served_and_referenced_by_every_page(self):
+        public_dir = Path(__file__).resolve().parents[1] / "public"
+        expected_sizes = {
+            "favicon.ico": None,
+            "favicon.svg": None,
+            "favicon-32x32.png": (32, 32),
+            "apple-touch-icon.png": (180, 180),
+        }
+        for name, size in expected_sizes.items():
+            response = self.client.get(f"/{name}")
+            self.assertEqual(response.status_code, 200, name)
+            data = (public_dir / name).read_bytes()
+            self.assertEqual(response.data, data, name)
+            if name.endswith(".png"):
+                self.assertEqual(struct.unpack(">II", data[16:24]), size)
+            response.close()
+
+        html_pages = list((public_dir.parent / "Frontend").rglob("*.html"))
+        self.assertEqual(len(html_pages), 8)
+        for page in html_pages:
+            source = page.read_text(encoding="utf-8")
+            for asset in expected_sizes:
+                self.assertIn(f'href="/{asset}"', source, str(page))
 
 
 if __name__ == "__main__":

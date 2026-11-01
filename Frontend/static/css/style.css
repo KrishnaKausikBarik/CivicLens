@@ -1711,6 +1711,113 @@ textarea.form-control {
   gap: 0.5rem;
 }
 
+/* Password reset page: homepage shell with the shared authentication-card styling. */
+.reset-page-main {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(2rem, 6vw, 4.5rem) 1rem;
+  background: var(--color-bg-base);
+  border-bottom: 0;
+}
+
+.reset-password-card {
+  max-width: 420px;
+  text-align: left;
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12), 0 3px 10px rgba(15, 23, 42, 0.05);
+}
+
+.reset-password-header {
+  padding: 1.25rem 1.5rem;
+}
+
+.reset-password-header .modal-title-wrap {
+  gap: 0.7rem;
+}
+
+.reset-password-header .modal-title {
+  font-size: 1.2rem;
+}
+
+.reset-password-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border: 1px solid var(--status-resolved-border);
+  border-radius: var(--radius-sm);
+}
+
+.reset-password-body {
+  padding: 1.5rem;
+}
+
+.reset-instruction {
+  margin-bottom: 1.1rem;
+  font-size: 0.9rem;
+}
+
+.reset-status:empty {
+  display: none;
+}
+
+.reset-status.form-error {
+  margin-bottom: 1rem;
+}
+
+.reset-status.reset-success {
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.password-visibility-toggle {
+  display: inline-block;
+  margin-top: 0.45rem;
+  font-size: 0.82rem;
+}
+
+.password-guidance {
+  margin-top: 0.35rem;
+  color: var(--color-text-sub);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.reset-submit-button {
+  margin-top: 0.35rem;
+}
+
+.reset-password-done {
+  margin-top: 0.85rem;
+}
+
+.reset-success-note {
+  margin-bottom: 0.6rem;
+  color: var(--color-primary);
+  font-size: 0.9rem;
+}
+
+.reset-login-return {
+  margin: 1rem 0 0;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.reset-login-return a,
+.reset-password-done a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .modal-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
