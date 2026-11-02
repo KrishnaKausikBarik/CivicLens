@@ -1,6 +1,4 @@
-/**
- * CivicLens - Flat Leaflet Map Setup with SVG Icons
- */
+
 
 const MapModule = (() => {
   const DEFAULT_LAT = 37.7749;
@@ -9,8 +7,6 @@ const MapModule = (() => {
 
   const TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
   const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-
-  // Flat SVG pin markers with zero emojis
   const createPinIcon = (status) => {
     let pinClass = 'pin-pending';
     let iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
@@ -84,8 +80,6 @@ const MapModule = (() => {
       const { lat, lng } = e.latlng;
       setLocation(lat, lng, map.getZoom());
     });
-
-    // Invalidate size after delay to ensure map tiles fill container completely
     setTimeout(() => {
       map.invalidateSize();
     }, 200);

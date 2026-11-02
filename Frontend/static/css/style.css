@@ -1,13 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap');
 
-/* ==========================================================================
-   CivicLens - Consolidated Flat Design System
-   Typography: Inter & JetBrains Mono
-   File: frontend/static/css/style.css
-   ========================================================================== */
+
 
 :root {
-  /* Flat Color System */
+  
   --color-primary: #065f46;
   --color-primary-hover: #044e3a;
   --color-primary-light: #ecfdf5;
@@ -24,7 +20,7 @@
   --color-text-sub: #64748b;
   --color-text-muted: #94a3b8;
 
-  /* Status Colors - Pure Flat */
+  
   --status-pending: #d97706;
   --status-pending-bg: #fffbeb;
   --status-pending-border: #fef3c7;
@@ -37,11 +33,11 @@
   --status-resolved-bg: #ecfdf5;
   --status-resolved-border: #a7f3d0;
 
-  /* Typography */
+  
   --font-family: 'Outfit', 'Urbanist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, Menlo, Monaco, Consolas, monospace;
 
-  /* Structural Geometry */
+  
   --radius-xs: 2px;
   --radius-sm: 4px;
   --radius-md: 6px;
@@ -49,9 +45,7 @@
   --transition: 0.15s ease;
 }
 
-/* ==========================================================================
-   Base Reset & Typography
-   ========================================================================== */
+
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -92,9 +86,7 @@ a:hover {
   color: var(--color-primary-hover);
 }
 
-/* ==========================================================================
-   Structural Layout Containers
-   ========================================================================== */
+
 
 .main-container {
   max-width: 1220px;
@@ -144,9 +136,7 @@ a:hover {
   margin-top: 1.5rem;
 }
 
-/* ==========================================================================
-   Navigation Bar
-   ========================================================================== */
+
 
 .navbar {
   background: var(--color-surface);
@@ -229,7 +219,7 @@ a:hover {
   background-color: var(--color-surface-hover);
 }
 
-/* Mobile Navigation Hamburger */
+
 .hamburger-btn {
   display: none;
   background: transparent;
@@ -266,9 +256,7 @@ a:hover {
   display: block;
 }
 
-/* ==========================================================================
-   Hero & Header Sections
-   ========================================================================== */
+
 
 .hero-section {
   background: var(--color-surface);
@@ -339,9 +327,7 @@ a:hover {
   line-height: 1.55;
 }
 
-/* ==========================================================================
-   Buttons
-   ========================================================================== */
+
 
 .btn {
   display: inline-flex;
@@ -419,7 +405,7 @@ a:hover {
   border-color: var(--color-border-dark);
 }
 
-/* Live Status Board Button & Animated Live Indicator */
+
 .btn-live-board {
   position: relative;
   display: inline-flex;
@@ -529,9 +515,7 @@ a:hover {
   width: 100%;
 }
 
-/* ==========================================================================
-   Cards & Content Units
-   ========================================================================== */
+
 
 .card {
   background: var(--color-surface);
@@ -575,9 +559,7 @@ a:hover {
   margin-top: 0.15rem;
 }
 
-/* ==========================================================================
-   Forms & Controls
-   ========================================================================== */
+
 
 .form-body {
   padding: 1.25rem;
@@ -627,7 +609,7 @@ textarea.form-control {
   width: 100%;
 }
 
-/* Area Search Bar & Locate Button (Equal Height & Clean Alignment) */
+
 .area-search-row {
   display: flex;
   align-items: stretch;
@@ -855,9 +837,7 @@ textarea.form-control {
   padding-left: 2.4rem;
 }
 
-/* ==========================================================================
-   Map Containers & Custom Leaflet Markers
-   ========================================================================== */
+
 
 .map-container-sm {
   width: 100%;
@@ -886,7 +866,7 @@ textarea.form-control {
   position: relative;
 }
 
-/* Remove / Crop Leaflet & OpenStreetMap watermark and attribution controls */
+
 .leaflet-control-attribution,
 .leaflet-bottom.leaflet-right,
 .leaflet-control-container .leaflet-bottom.leaflet-right {
@@ -939,9 +919,7 @@ textarea.form-control {
 .pin-progress { background-color: var(--status-progress); }
 .pin-resolved { background-color: var(--status-resolved); }
 
-/* ==========================================================================
-   Activity Feed & Resolution Steps
-   ========================================================================== */
+
 
 .activity-feed {
   padding: 0.5rem 1.25rem;
@@ -1062,9 +1040,7 @@ textarea.form-control {
   font-weight: 600;
 }
 
-/* ==========================================================================
-   Flat Statistics Grid
-   ========================================================================== */
+
 
 .stats-grid {
   display: grid;
@@ -1142,9 +1118,7 @@ textarea.form-control {
 .text-progress { color: var(--status-progress) !important; }
 .text-resolved { color: var(--status-resolved) !important; }
 
-/* ==========================================================================
-   Status Badges
-   ========================================================================== */
+
 
 .badge-status {
   display: inline-flex;
@@ -1183,9 +1157,7 @@ textarea.form-control {
   background-color: currentColor;
 }
 
-/* ==========================================================================
-   Category Distribution
-   ========================================================================== */
+
 
 .category-breakdown-list {
   padding: 1.25rem;
@@ -1229,9 +1201,7 @@ textarea.form-control {
   transition: width 0.4s ease;
 }
 
-/* ==========================================================================
-   Filters Toolbar & Data Tables
-   ========================================================================== */
+
 
 .filters-row {
   display: flex;
@@ -1364,7 +1334,7 @@ textarea.form-control {
   border-color: var(--color-primary);
 }
 
-/* Table Selection & Action Buttons */
+
 .row-checkbox {
   width: 16px;
   height: 16px;
@@ -1379,7 +1349,7 @@ textarea.form-control {
   background-color: rgba(6, 95, 70, 0.05) !important;
 }
 
-/* Bulk Actions Bar */
+
 .bulk-actions-bar {
   display: flex;
   align-items: center;
@@ -1439,7 +1409,7 @@ textarea.form-control {
   box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
 }
 
-/* Row Action Buttons (Edit & Delete after Reported Date) */
+
 .row-action-buttons {
   display: inline-flex;
   align-items: center;
@@ -1478,9 +1448,7 @@ textarea.form-control {
   transform: scale(0.95);
 }
 
-/* ==========================================================================
-   Admin Workspace & Sidebar
-   ========================================================================== */
+
 
 .admin-body {
   background-color: var(--color-bg-base);
@@ -1713,9 +1681,7 @@ textarea.form-control {
   color: var(--color-text-title);
 }
 
-/* ==========================================================================
-   Modals
-   ========================================================================== */
+
 
 .modal-backdrop {
   position: fixed;
@@ -1814,7 +1780,7 @@ textarea.form-control {
   gap: 0.5rem;
 }
 
-/* Password reset is rendered as a modal over the real homepage. */
+
 body.reset-password-mode {
   overflow: hidden;
 }
@@ -1983,9 +1949,7 @@ body.reset-password-mode {
   line-height: 1.45;
 }
 
-/* ==========================================================================
-   Toasts, Spinners & Global Utility
-   ========================================================================== */
+
 
 .toast-toast {
   position: fixed;
@@ -2112,7 +2076,7 @@ body.reset-password-mode {
 }
 
 
-/* Mobile Table Scroll Cue */
+
 .table-scroll-hint {
   display: none;
   align-items: center;
@@ -2129,9 +2093,7 @@ body.reset-password-mode {
   color: var(--color-primary);
 }
 
-/* ==========================================================================
-   Responsive Adaptations
-   ========================================================================== */
+
 
 @media (max-width: 960px) {
   .grid-layout-two-column {
@@ -2216,7 +2178,7 @@ body.reset-password-mode {
     display: inline-flex;
   }
 
-  /* Overlay over the page: floating dropdown without shifting layout */
+  
   .nav-links {
     display: none;
     position: absolute;
@@ -2252,7 +2214,7 @@ body.reset-password-mode {
     margin-top: 0.25rem;
   }
 
-  /* Dashboard Header Mobile */
+  
   .dashboard-header-bar {
     padding: 1.5rem 0;
   }
@@ -2285,12 +2247,12 @@ body.reset-password-mode {
     line-height: 1.5;
   }
 
-  /* Container Padding on Mobile */
+  
   .main-container {
     padding: 1.25rem 1rem;
   }
 
-  /* 2x2 Clean Dashboard Metric Cards Grid */
+  
   .stats-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 0.75rem;
@@ -2317,14 +2279,14 @@ body.reset-password-mode {
     text-overflow: ellipsis;
   }
 
-  /* Split Layout on Mobile: Single Column */
+  
   .grid-layout-map-split {
     grid-template-columns: 1fr;
     gap: 1.25rem;
     margin-top: 1.25rem;
   }
 
-  /* Map Card Adjustments */
+  
   .card-header.flex-between {
     flex-direction: column;
     align-items: stretch;
@@ -2346,7 +2308,7 @@ body.reset-password-mode {
     padding: 1rem;
   }
 
-  /* Incident Directory Section */
+  
   .section-margin-top {
     margin-top: 1.25rem;
   }
@@ -2357,7 +2319,7 @@ body.reset-password-mode {
     gap: 0.85rem;
   }
 
-  /* Table Mobile Scroll Cue & Touch Scrolling */
+  
   .table-scroll-hint {
     display: flex;
   }
@@ -2403,7 +2365,7 @@ body.reset-password-mode {
   }
 }
 
-/* Semi-transparent backdrop when mobile nav is open */
+
 .nav-backdrop {
   display: none;
   position: fixed;
@@ -2505,7 +2467,7 @@ body.reset-password-mode {
   }
 
   .stat-sub {
-    display: none; /* Hide verbose subtitle on narrow phone viewports */
+    display: none; 
   }
 
   .map-container-lg {
@@ -2517,9 +2479,7 @@ body.reset-password-mode {
   }
 }
 
-/* ==========================================================================
-   Public Dashboard Complaint Highlight & Submission Confirmation
-   ========================================================================== */
+
 
 .table-row-highlight {
   background-color: #f0fdf4 !important;

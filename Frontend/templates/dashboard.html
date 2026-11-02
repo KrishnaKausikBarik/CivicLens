@@ -9,21 +9,21 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <title>CivicLens - Public Analytics & Live Dashboard</title>
   
-  <!-- Font: Inter & JetBrains Mono -->
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Urbanist:ital,wght@0,100..900;1,100..900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-  <!-- Leaflet CSS -->
+  
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  <!-- Flat Design Stylesheet -->
-  <!-- Flat Design Stylesheet (Flask url_for + Direct Browser Fallback) -->
+  
+  
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" onerror="this.onerror=null;this.href='../static/css/style.css';">
   <link rel="stylesheet" href="../static/css/style.css">
 </head>
 <body data-page="dashboard">
 
-  <!-- Top Navigation -->
+  
   <header class="navbar">
     <div class="nav-container">
       <a href="index.html" class="brand">
@@ -63,7 +63,7 @@
     </div>
   </header>
 
-  <!-- Page Header Banner -->
+  
   <section class="dashboard-header-bar">
     <div class="main-container">
       <div class="flex-between align-center dashboard-header-content">
@@ -82,9 +82,9 @@
   </section>
 
   <main class="main-container">
-    <!-- Key Statistics Row (Flat Metrics with SVG Icons) -->
+    
     <div class="stats-grid">
-      <!-- Total Reports -->
+      
       <div class="stat-card">
         <div class="stat-meta">
           <span class="stat-label">Total Reports</span>
@@ -96,7 +96,7 @@
         <div class="stat-sub">Lifetime registered complaints</div>
       </div>
 
-      <!-- Pending Reports -->
+      
       <div class="stat-card">
         <div class="stat-meta">
           <span class="stat-label">Pending</span>
@@ -108,7 +108,7 @@
         <div class="stat-sub">Awaiting municipal evaluation</div>
       </div>
 
-      <!-- In Progress Reports -->
+      
       <div class="stat-card">
         <div class="stat-meta">
           <span class="stat-label">In Progress</span>
@@ -120,7 +120,7 @@
         <div class="stat-sub">Dispatched to maintenance crews</div>
       </div>
 
-      <!-- Resolved Reports -->
+      
       <div class="stat-card">
         <div class="stat-meta">
           <span class="stat-label">Resolved</span>
@@ -133,9 +133,9 @@
       </div>
     </div>
 
-    <!-- Map & Category Split Section -->
+    
     <div class="grid-layout-map-split">
-      <!-- Full Interactive Overview Map -->
+      
       <section class="card">
         <div class="card-header flex-between">
           <div class="header-icon-title">
@@ -156,7 +156,7 @@
         <div id="dashboardOverviewMap" class="map-container-lg"></div>
       </section>
 
-      <!-- Category Distribution Bar Cards -->
+      
       <section class="card">
         <div class="card-header">
           <div class="header-icon-title">
@@ -175,7 +175,7 @@
       </section>
     </div>
 
-    <!-- Complaint Feed / Filter Table -->
+    
     <section class="card section-margin-top">
       <div class="card-header">
         <div class="flex-between align-center flex-wrap gap-md">
@@ -189,7 +189,7 @@
             </div>
           </div>
           
-          <!-- Filters Toolbar -->
+          
           <div class="filters-row">
             <div class="search-field-wrapper">
               <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -223,7 +223,7 @@
         </div>
       </div>
 
-      <!-- Bulk Actions Bar -->
+      
       <div id="bulkActionsBar" class="bulk-actions-bar" style="display: none;">
         <div class="bulk-selected-info">
           <span class="bulk-check-icon">
@@ -274,8 +274,8 @@
     </section>
   </main>
 
-  <!-- Notification Toast Container -->
-    <!-- Edit Complaint Modal -->
+  
+    
   <div class="modal-backdrop" id="editComplaintModal">
     <div class="modal-card">
       <div class="modal-header">
@@ -336,9 +336,9 @@
 
   {% include "partials/footer.html" %}
 
-  <!-- Leaflet JS -->
+  
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <!-- Application JS -->
+  
   <script src="{{ url_for('static', filename='js/map.js') }}"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>

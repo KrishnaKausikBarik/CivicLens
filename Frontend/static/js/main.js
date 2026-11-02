@@ -1,7 +1,4 @@
-/**
- * CivicLens - UI Controller (Flat badges, SVG icons, zero emojis)
- * Supports index, dashboard, and admin pages seamlessly.
- */
+
 
 const API_BASE_URL = window.location.origin;
 
@@ -100,7 +97,6 @@ const CivicAPI = {
     const localReports = JSON.parse(localStorage.getItem('civiclens_mock_reports') || '[]');
 
     if (serverReports && Array.isArray(serverReports)) {
-      // Merge any user reports created locally that might not yet be in server DB
       const serverIds = new Set(serverReports.map(r => String(r.id)));
       const extraLocal = localReports.filter(r => !serverIds.has(String(r.id)));
       const combined = [...extraLocal, ...serverReports];
@@ -178,8 +174,6 @@ const CivicAPI = {
     } catch (err) {
       throw err;
     }
-
-    // Sync in local storage
     const items = JSON.parse(localStorage.getItem('civiclens_mock_reports') || '[]');
     const idx = items.findIndex(r => String(r.id) === String(id));
     if (idx !== -1) {
@@ -253,8 +247,6 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
-
-// Universal Link Adapter: ensures navigation works in Live Server, file://, and Flask
 function adaptNavigationLinks() {
   const isStaticEnv = window.location.protocol === 'file:' || !window.location.origin.includes(':5000');
   if (isStaticEnv) {
@@ -272,10 +264,6 @@ function adaptNavigationLinks() {
 }
 
 let cachedReports = [];
-
-// ==========================================
-// 1. Index Page Logic
-// ==========================================
 function initIndexPage() {
   const form = document.getElementById('complaintForm');
   const pickerMap = MapModule.initPickerMap('pickerMap', 'latitude', 'longitude');
@@ -320,8 +308,6 @@ function initIndexPage() {
       listContainer.innerHTML = '<p class="text-center py-3" style="color:var(--color-text-muted);font-size:0.8rem;">Failed to fetch community log.</p>';
     }
   }
-
-  // Area / Locality Search Feature
   const areaInput = document.getElementById('areaSearchInput');
   const areaBtn = document.getElementById('areaSearchBtn');
   const locationSuggestions = document.getElementById('locationSuggestions');
@@ -567,8 +553,6 @@ function initIndexPage() {
       try {
         const result = await CivicAPI.createReport({ title, category, description, latitude, longitude });
         const report = result.report;
-
-        // Display rich confirmation card with direct link and auto-redirect to Public Dashboard
         const formCard = document.querySelector('.form-card');
         const formBody = document.getElementById('complaintForm');
 
@@ -657,10 +641,6 @@ function initIndexPage() {
     });
   }
 }
-
-// ==========================================
-// 2. Dashboard Page Logic
-// ==========================================
 async function initDashboardPage() {
   const statTotal = document.getElementById('statTotal');
   const statPending = document.getElementById('statPending');
@@ -675,13 +655,9 @@ async function initDashboardPage() {
   const selectAllCheckbox = document.getElementById('selectAllCheckbox');
   const bulkBar = document.getElementById('bulkActionsBar');
   const selectedCountText = document.getElementById('selectedCountText');
-
-  // Detect highlighted report from URL param or recent session
   const urlParams = new URLSearchParams(window.location.search);
   const highlightId = urlParams.get('highlight') || localStorage.getItem('civiclens_latest_report_id');
   let myReports = JSON.parse(localStorage.getItem('civiclens_my_reports') || '[]');
-
-  // Selection state
   const selectedReportIds = new Set();
 
   try {
@@ -728,8 +704,6 @@ async function initDashboardPage() {
     }
 
     refreshDashboardMetrics();
-
-    // Initialize Overview Map and center on the user's report if available
     let overviewMapObj = null;
     if (MapModule.initOverviewMap) {
       overviewMapObj = MapModule.initOverviewMap('dashboardOverviewMap', cachedReports, highlightId);
@@ -838,8 +812,6 @@ async function initDashboardPage() {
       }).join('');
 
       updateBulkActionsBar();
-
-      // Auto-scroll to highlighted report row if present
       if (highlightId) {
         setTimeout(() => {
           const targetRow = document.getElementById(`reportRow-${highlightId}`);
@@ -850,8 +822,6 @@ async function initDashboardPage() {
         }, 300);
       }
     }
-
-    // Single complaint delete
     window.deleteComplaint = async function(reportId) {
       const confirmed = window.confirm(`Are you sure you want to permanently delete Incident Report #${reportId}?`);
       if (!confirmed) return;
@@ -878,8 +848,6 @@ async function initDashboardPage() {
         showToast('Failed to delete report. Please try again.', 'error');
       }
     };
-
-    // Bulk delete complaints
     window.bulkDeleteComplaints = async function() {
       const ids = Array.from(selectedReportIds);
       if (ids.length === 0) {
@@ -922,14 +890,10 @@ async function initDashboardPage() {
         showToast('Failed to bulk delete reports.', 'error');
       }
     };
-
-    // Clear selection helper
     window.clearSelectedComplaints = function() {
       selectedReportIds.clear();
       renderTable();
     };
-
-    // Checkbox interaction events
     if (selectAllCheckbox) {
       selectAllCheckbox.addEventListener('change', (e) => {
         const checked = e.target.checked;
@@ -977,10 +941,6 @@ async function initDashboardPage() {
     if (tableBody) tableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4" style="color:var(--color-text-muted);">Failed to load dashboard data.</td></tr>';
   }
 }
-
-// ==========================================
-// 3. Admin Page Logic
-// ==========================================
 async function initAdminPage() {
   const statTotal = document.getElementById('adminStatTotal');
   const statPending = document.getElementById('adminStatPending');
@@ -1095,8 +1055,6 @@ async function initCitizenPage() {
     }
   }
 }
-
-// Global modal and action handlers
 window.handleStatusChange = async function(id, newStatus) {
   try {
     await CivicAPI.updateStatus(id, newStatus);
@@ -1402,10 +1360,6 @@ document.getElementById('citizenLogoutBtn')?.addEventListener('click', async () 
   await csrfFetch(`${API_BASE_URL}/api/logout`, { method: 'POST' });
   window.location.assign('/');
 });
-
-// ==========================================
-// Mobile Hamburger Navigation
-// ==========================================
 function initMobileNavigation() {
   const mobileMenuBtn = document.getElementById('mobileMenuBtn');
   const navLinks = document.getElementById('navLinks') || document.querySelector('.nav-links');
@@ -1443,13 +1397,9 @@ function initMobileNavigation() {
     });
 
     navBackdrop.addEventListener('click', closeNav);
-
-    // Close when clicking any nav link
     navLinks.querySelectorAll('.nav-link').forEach((link) => {
       link.addEventListener('click', closeNav);
     });
-
-    // Close when clicking outside navbar
     document.addEventListener('click', (e) => {
       if (!navLinks.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
         if (navLinks.classList.contains('open')) {
@@ -1457,23 +1407,17 @@ function initMobileNavigation() {
         }
       }
     });
-
-    // Close on Escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && navLinks.classList.contains('open')) {
         closeNav();
       }
     });
-
-    // Auto close if resized to desktop
     window.addEventListener('resize', () => {
       if (window.innerWidth > 768 && navLinks.classList.contains('open')) {
         closeNav();
       }
     });
   }
-
-  // Admin sidebar mobile drawer toggle
   const menuToggle = document.getElementById('menuToggle');
   const adminSidebar = document.getElementById('adminSidebar');
   const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
@@ -1521,14 +1465,6 @@ function initMobileNavigation() {
     });
   }
 }
-
-// ==========================================
-// Master Page Router
-// ==========================================
-
-// ==========================================
-// Edit Complaint Modal Controller
-// ==========================================
 window.openEditComplaintModal = async function(reportId) {
   const modal = document.getElementById('editComplaintModal');
   if (!modal) return;
@@ -1604,18 +1540,12 @@ function initEditComplaintForm() {
       if (res && res.success) {
         showToast(`Complaint #${id} updated successfully!`, 'success');
         window.closeEditModal();
-
-        // Refresh cache
         cachedReports = await CivicAPI.getReports();
-
-        // Refresh active page view
         const page = document.body.dataset.page;
         if (page === 'dashboard') {
-          // Re-trigger table search & filter
           const searchInput = document.getElementById('dashboardSearchInput');
           if (searchInput) searchInput.dispatchEvent(new Event('input'));
         } else if (page === 'index') {
-          // Refresh recent issues feed
           const listContainer = document.getElementById('recentIssuesList');
           if (listContainer) {
             const recent = cachedReports.slice(0, 5);
@@ -1650,8 +1580,6 @@ function initEditComplaintForm() {
       }
     }
   });
-
-  // Close on Escape or click outside
   document.getElementById('editComplaintModal')?.addEventListener('click', (e) => {
     if (e.target.id === 'editComplaintModal') {
       window.closeEditModal();

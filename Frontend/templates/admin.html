@@ -9,22 +9,22 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <title>CivicLens - Municipal Admin Portal</title>
   
-  <!-- Font: Inter & JetBrains Mono -->
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Urbanist:ital,wght@0,100..900;1,100..900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-  <!-- Leaflet CSS -->
+  
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  <!-- Flat Design Stylesheet -->
-  <!-- Flat Design Stylesheet (Flask url_for + Direct Browser Fallback) -->
+  
+  
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" onerror="this.onerror=null;this.href='../static/css/style.css';">
   <link rel="stylesheet" href="../static/css/style.css">
 </head>
 <body data-page="admin" class="admin-body">
 
   <div class="admin-wrapper">
-    <!-- Sidebar -->
+    
     <aside class="admin-sidebar" id="adminSidebar">
       <div class="sidebar-header">
         <a href="index.html" class="brand brand-light">
@@ -80,9 +80,9 @@
     </aside>
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-    <!-- Main Admin Workspace -->
+    
     <div class="admin-main">
-      <!-- Admin Top Navbar -->
+      
       <header class="admin-topbar">
         <div class="topbar-left">
           <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle navigation">
@@ -95,11 +95,11 @@
         </div>
       </header>
 
-      <!-- Admin Content Body -->
+      
       <main class="admin-content-padding">
-        <!-- Quick Stats Metrics (Pure Flat with SVG Icons) -->
+        
         <div class="stats-grid">
-          <!-- Total Assigned -->
+          
           <div class="stat-card">
             <div class="stat-meta">
               <span class="stat-label">Total Assigned</span>
@@ -111,7 +111,7 @@
             <div class="stat-sub">All ticket assignments</div>
           </div>
 
-          <!-- Pending Action -->
+          
           <div class="stat-card">
             <div class="stat-meta">
               <span class="stat-label">Require Dispatch</span>
@@ -123,7 +123,7 @@
             <div class="stat-sub">Unassigned citizen tickets</div>
           </div>
 
-          <!-- In Progress -->
+          
           <div class="stat-card">
             <div class="stat-meta">
               <span class="stat-label">Active Deployments</span>
@@ -135,7 +135,7 @@
             <div class="stat-sub">Field crews on site</div>
           </div>
 
-          <!-- Resolved -->
+          
           <div class="stat-card">
             <div class="stat-meta">
               <span class="stat-label">Resolved & Audited</span>
@@ -148,7 +148,7 @@
           </div>
         </div>
 
-        <!-- Management Panel -->
+        
         <div class="card section-margin-top">
           <div class="card-header">
             <div class="flex-between align-center flex-wrap gap-md">
@@ -162,7 +162,7 @@
                 </div>
               </div>
 
-              <!-- Filter Tools -->
+              
               <div class="filters-row">
                 <div class="search-field-wrapper">
                   <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -196,7 +196,7 @@
             </div>
           </div>
 
-          <!-- Table of Tickets -->
+          
           <div class="table-responsive">
             <table class="data-table">
               <thead>
@@ -226,7 +226,7 @@
     </div>
   </div>
 
-  <!-- Complaint Detail & Inspection Modal -->
+  
   <div class="modal-backdrop" id="detailModal">
     <div class="modal-card">
       <div class="modal-header">
@@ -277,7 +277,7 @@
     </div>
   </div>
 
-  <!-- Staff Login Interface Modal -->
+  
   <div class="modal-backdrop" id="loginModal">
     <div class="modal-card modal-sm">
       <div class="modal-header">
@@ -321,12 +321,12 @@
     </div>
   </div>
 
-  <!-- Notification Toast Container -->
+  
   <div id="toastNotification" class="toast-toast" aria-live="polite"></div>
 
-  <!-- Leaflet JS -->
+  
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <!-- Application JS -->
+  
   <script src="{{ url_for('static', filename='js/map.js') }}"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
