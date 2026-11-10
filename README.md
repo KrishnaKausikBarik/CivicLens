@@ -1,40 +1,46 @@
-# CivicLens
+import pypandoc
+
+readme = r"""# CivicLens
 ### Cloud-Based Citizen Complaint Reporting and Tracking Platform
 
 **See the Problem. Report the Issue. Improve the Community.**
 
-CivicLens is a cloud-hosted citizen complaint management application designed to help communities report, monitor, and track public infrastructure problems through a centralized digital platform.
+CivicLens is a cloud-hosted citizen complaint management application that helps communities report, monitor, and track public infrastructure problems through a centralized digital platform.
 
-The application provides separate interfaces for citizens & administrators. Citizens can register, log in, submit complaints, and monitor their submitted reports. Administrators can review complaints, identify their submitters, and update complaint statuses.
+Citizens can register, log in, submit complaints, and track their reports. Administrators can review complaints, view submitter information, and update complaint statuses.
 
-CivicLens is built using Python Flask, vanilla JavaScript, and Supabase PostgreSQL. The application is deployed on Vercel, where the Flask backend runs through Vercel's Python Functions runtime.
+The application is built with **Python Flask**, **HTML**, **CSS**, **vanilla JavaScript**, and **Supabase PostgreSQL**. It is deployed on **Vercel**, where the Flask backend runs through Vercel's Python Functions runtime. **Google Cloud Platform (GCP)** is included as an additional cloud platform in the project technology roadmap; the current implementation described here does not yet depend on a configured GCP service.
 
 ---
 
-## 1. Problem Statement
+## Table of Contents
 
-Public infrastructure problems such as damaged roads, potholes, garbage accumulation, blocked drainage systems, and malfunctioning streetlights affect the daily lives of citizens.
+- [Features](#features)
+- [Technology Stack](#technology-stack)
+- [System Architecture](#system-architecture)
+- [Cloud Platforms and Services](#cloud-platforms-and-services)
+- [Database Design](#database-design)
+- [Authentication and Security](#authentication-and-security)
+- [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Local Installation and Setup](#local-installation-and-setup)
+- [Environment Variables](#environment-variables)
+- [Database Setup](#database-setup)
+- [Run the Application](#run-the-application)
+- [API and Health Check](#api-and-health-check)
+- [Production Deployment](#production-deployment)
+- [Automated Testing](#automated-testing)
+- [Cloud Computing Concepts](#cloud-computing-concepts)
+- [GCP Integration Roadmap](#gcp-integration-roadmap)
+- [Limitations](#limitations)
+- [Future Enhancements](#future-enhancements)
+- [Contributors](#contributors)
+- [Useful Documentation](#useful-documentation)
+- [Repository and Live Demo](#repository-and-live-demo)
 
-However, reporting and monitoring these problems can be difficult when information is scattered across different communication channels.
+---
 
-CivicLens aims to address this issue by providing a centralized platform where citizens can submit complaints and administrators can manage and monitor them.
-
-The application promotes transparency, accessibility, and organized complaint management through cloud-based infrastructure.
-
-## 2. Objectives
-
-The main objectives of CivicLens are:
-
-- To provide a centralized platform for reporting public infrastructure problems.
-- To enable citizens to register and authenticate securely.
-- To maintain complaint records in a cloud-hosted relational database.
-- To provide administrators with complaint management capabilities.
-- To allow citizens to track their submitted complaints.
-- To implement secure authentication and authorization mechanisms.
-- To provide a cloud-deployed application accessible through the internet.
-- To demonstrate the practical use of serverless cloud computing and Database as a Service (DBaaS).
-
-## 3. Key Features
+## Features
 
 ### Citizen Module
 
@@ -53,7 +59,7 @@ The main objectives of CivicLens are:
 - Access to complaint submitter information.
 - Complaint status management.
 - Restricted administrative operations.
-- Visibility into legacy complaints with unavailable user associations.
+- Visibility into legacy complaints whose user associations are unavailable.
 
 ### Security Features
 
@@ -68,17 +74,20 @@ The main objectives of CivicLens are:
 - SQLAlchemy ORM-based database operations.
 - HTTPS and SSL-secured database connections in production.
 
-## 4. Technology Stack
+---
 
-| Component | Technology | Purpose |
+## Technology Stack
+
+| Layer / Component | Technology | Purpose |
 |---|---|---|
 | Frontend | HTML, CSS, JavaScript | User interface |
 | Backend | Python Flask | Application logic and REST APIs |
 | Database | Supabase PostgreSQL | Persistent application data |
 | ORM | SQLAlchemy | Database operations |
 | Database Driver | Psycopg | PostgreSQL connectivity |
-| Cloud Application Hosting | Vercel | Application deployment |
+| Primary Cloud Hosting | Vercel | Application deployment and hosting |
 | Backend Runtime | Vercel Python Functions | Serverless backend execution |
+| Additional Cloud Platform | Google Cloud Platform (GCP) | Additional cloud-service integration |
 | Database Connection Pooling | Supavisor | Managed PostgreSQL connection pooling |
 | Authentication | Flask session-based authentication | Citizen and administrator authentication |
 | Password Security | Werkzeug | Password hashing |
@@ -86,21 +95,21 @@ The main objectives of CivicLens are:
 | Testing | Python unittest | Automated application testing |
 | Version Control | Git and GitHub | Source code management |
 
-## 5. Cloud Architecture
+> **GCP implementation status:** Vercel and Supabase are the services used by the current deployment. GCP is included as an additional platform for future integration. Do not consider a GCP service active until it has been configured and connected in the application.
+
+---
+
+## System Architecture
 
 CivicLens follows a cloud-hosted, three-tier application architecture.
 
-### Presentation Layer
+### 1. Presentation Layer
 
-The presentation layer consists of HTML, CSS, and vanilla JavaScript. It provides the citizen and administrator interfaces.
+The presentation layer consists of HTML, CSS, and vanilla JavaScript. It provides separate interfaces for citizens and administrators. Frontend templates and static resources are served through the Vercel deployment.
 
-The frontend templates and static resources are served through the Vercel deployment.
+### 2. Application Layer
 
-### Application Layer
-
-The application layer is implemented using Python Flask.
-
-The Flask application handles:
+The application layer is implemented using Python Flask. It handles:
 
 - User registration and authentication.
 - Citizen complaint submission.
@@ -112,13 +121,11 @@ The Flask application handles:
 
 The Flask application is deployed as a Python Function on Vercel.
 
-### Data Layer
+### 3. Data Layer
 
-The data layer uses Supabase PostgreSQL, a managed cloud relational database.
+The data layer uses Supabase PostgreSQL, a managed cloud relational database. SQLAlchemy and Psycopg are used to interact with PostgreSQL. Supavisor provides managed database connection pooling.
 
-SQLAlchemy and Psycopg are used to interact with PostgreSQL. Supavisor provides managed database connection pooling.
-
-Database credentials are maintained in the backend environment rather than exposed to the browser.
+Database credentials are maintained in the backend environment and are not exposed to the browser.
 
 ### Architecture Diagram
 
@@ -126,7 +133,6 @@ Database credentials are maintained in the backend environment rather than expos
 flowchart TD
     A[Citizens and Administrators] --> B[Web Browser]
     B --> C[Vercel Cloud Platform]
-
     C --> D[Static Frontend]
     C --> E[Python Runtime / Flask Function]
 
@@ -134,8 +140,8 @@ flowchart TD
     E --> G[Complaint Management APIs]
     E --> H[Password Recovery]
 
-    G --> I[SQLAlchemy ORM]
-    F --> I
+    F --> I[SQLAlchemy ORM]
+    G --> I
     H --> I
 
     I --> J[Supavisor Connection Pooler]
@@ -144,20 +150,21 @@ flowchart TD
     H --> L[Gmail SMTP]
     L --> M[Password Recovery Email]
 
-    K --> I
-    I --> E
-    E --> B
+    N[Google Cloud Platform]
+    N -. Additional integration planned .-> O[Google Cloud Services]
 ```
 
-## 6. Cloud Services Used
+The GCP connection shown with a dotted line represents a planned additional integration. It is not part of the current request-processing path.
 
-### 6.1 Vercel
+---
 
-Vercel is used as the cloud application hosting and deployment platform.
+## Cloud Platforms and Services
 
-The project is deployed from the repository root as a single Vercel application.
+### 1. Vercel
 
-The platform provides:
+Vercel is the primary cloud application hosting and deployment platform.
+
+The project is deployed from the repository root as a single Vercel application. It provides:
 
 - Hosting for the public-facing application.
 - Execution of the Python Flask application through Vercel Functions.
@@ -166,11 +173,9 @@ The platform provides:
 - Environment variable configuration.
 - Deployment management and application logs.
 
-The root `app.py` exports the Flask application, which is detected by Vercel's Python runtime.
+The root `app.py` exports the Flask application, which is detected by Vercel's Python runtime. The deployment configuration includes the required Flask templates and static assets.
 
-The deployment configuration includes the required Flask templates and static assets.
-
-### 6.2 Supabase PostgreSQL
+### 2. Supabase PostgreSQL
 
 Supabase provides the managed PostgreSQL database used by CivicLens.
 
@@ -185,17 +190,15 @@ The application communicates with the database through SQLAlchemy and Psycopg.
 
 The application does not automatically recreate the database schema or modify existing complaint records during startup.
 
-### 6.3 Supavisor Connection Pooler
+### 3. Supavisor Connection Pooler
 
 Supavisor is used for managed PostgreSQL connection pooling.
 
-The production deployment currently uses the shared Session Pooler on port 5432.
-
-This enables the application to connect through Supabase's shared pooler rather than depending on a direct database connection.
+The production deployment currently uses the shared Session Pooler on port `5432`. This allows the application to connect through Supabase's shared pooler rather than depending on a direct database connection.
 
 The application also supports the Transaction Pooler configuration, with prepared statements disabled for compatibility.
 
-### 6.4 Gmail SMTP
+### 4. Gmail SMTP
 
 Gmail SMTP is used to deliver citizen password recovery emails.
 
@@ -207,7 +210,7 @@ When a citizen requests password recovery:
 4. The citizen uses the reset link to establish a new password.
 5. The token is invalidated after successful use.
 
-SMTP credentials are configured through environment variables. For local development, add these values to the ignored project-root `.env`; in Vercel, set them in Project Settings for each environment that should send email:
+SMTP credentials are configured through environment variables. For local development, add these values to the ignored project-root `.env` file. In Vercel, set them in Project Settings for each environment that should send email.
 
 ```dotenv
 SMTP_HOST=smtp.gmail.com
@@ -218,15 +221,25 @@ SMTP_SENDER_EMAIL=your-address@gmail.com
 SMTP_SENDER_NAME=CivicLens
 ```
 
-Enable 2-Step Verification on the Google account, then create an App Password in Google Account security settings. Use that 16-character value as `SMTP_PASSWORD`; do not use the normal Gmail password. Port `587` uses STARTTLS, while port `465` uses implicit TLS. The sender address should be the authenticated Gmail account. Keep real credentials out of Git. SMTP delivery runs synchronously with a 10-second connection timeout; the Vercel function allows up to 30 seconds for password recovery email processing.
+Enable 2-Step Verification on the Google account, then create an App Password in Google Account security settings. Use that 16-character value as `SMTP_PASSWORD`; do not use the normal Gmail password. Port `587` uses STARTTLS, while port `465` uses implicit TLS. Keep real credentials out of Git.
 
-**Note:** Gmail SMTP is an external email integration, not the application's primary cloud hosting service.
+SMTP delivery runs synchronously with a 10-second connection timeout. The Vercel function allows up to 30 seconds for password recovery email processing.
 
-## 7. Database Design
+> Gmail SMTP is an external email integration, not the application's primary cloud hosting service.
+
+### 5. Google Cloud Platform (GCP)
+
+GCP is included as an additional cloud platform for extending CivicLens without replacing the existing Vercel deployment or Supabase database.
+
+The current project documentation does not establish that a GCP service has been configured or connected to the running application. A suitable next integration is **Google Cloud Storage** for storing complaint photographs and other uploaded files.
+
+Until that integration is implemented, complaint-image storage through GCP should be treated as planned functionality, not an existing feature. The existing application deployment continues to use Vercel and Supabase.
+
+---
+
+## Database Design
 
 The application uses the existing Supabase PostgreSQL schema.
-
-The primary application tables include:
 
 ### Users
 
@@ -266,7 +279,9 @@ Legacy complaint records without an associated user ID are displayed as `Legacy/
 
 The API retains compatibility response fields for `admin_notes` and `updated_at`, using appropriate null or creation-time values where the existing database schema does not contain those columns.
 
-## 8. Authentication and Authorization
+---
+
+## Authentication and Security
 
 CivicLens implements application-level authentication using Flask.
 
@@ -291,11 +306,9 @@ The administrator can access complaint information, including submitter names an
 
 ### Session and Request Security
 
-State-changing API requests require a valid CSRF token.
-
-The application uses SQLAlchemy ORM query operations to reduce the risk of SQL injection.
-
-Citizen and administrator login failures are rate limited using PostgreSQL-backed records.
+- State-changing API requests require a valid CSRF token.
+- SQLAlchemy ORM query operations are used to reduce the risk of SQL injection.
+- Citizen and administrator login failures are rate limited using PostgreSQL-backed records.
 
 ### Password Recovery Security
 
@@ -310,52 +323,44 @@ Password changes increment the user's password version, invalidating existing ci
 
 Reset links use the configured `FRONTEND_URL` rather than trusting an incoming request's Host header.
 
-## 9. Application Deployment
+---
 
-The application is deployed on Vercel using the repository root as the project directory.
+## Project Structure
 
-Vercel detects the Flask application through the root `app.py` file.
-
-The `vercel.json` configuration ensures the required application templates are included in the Python Function bundle.
-
-Static frontend files are served from:
+The repository uses the following important paths. Adjust this example if your actual repository has a different layout.
 
 ```text
-public/static/
+CivicLens/
+├── app.py
+├── vercel.json
+├── requirements.txt
+├── .env.example
+├── .gitignore
+├── Backend/
+│   └── migrations/
+│       ├── 20261101_password_reset.sql
+│       └── 20261102_password_reset_security.sql
+├── Frontend/
+│   └── templates/
+├── public/
+│   └── static/
+└── tests/
 ```
 
-HTML templates are maintained under:
+---
 
-```text
-Frontend/templates/
-```
+## Prerequisites
 
-### Production Configuration
-
-The production application uses environment variables to configure:
-
-- PostgreSQL database connection.
-- Flask secret key.
-- Administrator credentials.
-- Production environment.
-- Secure cookies.
-- Application origin.
-- SMTP email configuration.
-
-The production database uses a Supabase shared pooler connection with SSL enabled.
-
-The production application rejects missing or invalid critical configuration, including database connection information, signing keys and administrator credentials.
-
-SQLite is supported only as a local-development fallback.
-
-## 10. Local Installation and Execution
-
-### Prerequisites
+Install the following before running CivicLens locally:
 
 - Python 3.9 or newer.
 - pip package manager.
 - Git.
 - Access to a Supabase PostgreSQL database for cloud database testing.
+
+---
+
+## Local Installation and Setup
 
 ### Step 1: Clone the repository
 
@@ -366,12 +371,18 @@ cd CivicLens
 
 ### Step 2: Create a virtual environment
 
-On Windows PowerShell:
+**Windows PowerShell**
 
 ```powershell
 python -m venv .venv
-
 .\.venv\Scripts\Activate.ps1
+```
+
+**macOS / Linux**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
 ```
 
 ### Step 3: Install dependencies
@@ -382,9 +393,25 @@ pip install -r requirements.txt
 
 ### Step 4: Configure environment variables
 
-Create a `.env` file in the project root.
+Create a `.env` file in the project root and add the required configuration. Refer to the [Environment Variables](#environment-variables) section.
 
-Configure the following variables:
+### Step 5: Start the application
+
+```bash
+python app.py
+```
+
+Open the application at:
+
+```text
+http://127.0.0.1:5000
+```
+
+---
+
+## Environment Variables
+
+Create a `.env` file in the project root. The following is a template; replace every placeholder with your own configuration.
 
 ```dotenv
 FLASK_ENV=development
@@ -409,39 +436,42 @@ SMTP_SENDER_EMAIL=your_email@gmail.com
 SMTP_SENDER_NAME=CivicLens
 ```
 
-Replace placeholder values with the actual configuration.
+Important:
 
-The database URL should be obtained from Supabase Dashboard → Connect → Session Pooler.
+- Replace placeholder values with the actual configuration.
+- Obtain the database URL from **Supabase Dashboard → Connect → Session Pooler**.
+- Use the PostgreSQL Psycopg SQLAlchemy scheme: `postgresql+psycopg://`.
+- Keep SSL enabled and percent-encode reserved characters in database passwords.
+- Never commit `.env` to GitHub.
+- Keep `.env.example` limited to placeholders; never put real credentials in it.
+- Generate a Werkzeug password hash for the administrator password and store the hash in `ADMIN_PASSWORD_HASH`, not the plain-text password.
 
-Use the PostgreSQL Psycopg SQLAlchemy scheme:
+For local development, SQLite is supported as a fallback. Production configuration requires the supported Supabase PostgreSQL pooler connection.
 
-```text
-postgresql+psycopg://
-```
+---
 
-Keep SSL enabled and percent-encode reserved characters in database passwords.
+## Database Setup
 
-Never commit `.env` to GitHub.
+The application uses the existing Supabase PostgreSQL schema.
 
-The administrator username is fixed as `admin`; the configured password is `admin123`. `ADMIN_PASSWORD_HASH` must contain a Werkzeug hash that verifies this password; do not store the plain-text password in the repository. `.env.example` contains placeholders only.
+Password recovery requires additional database migrations. For another Supabase database, run the following migration files in the Supabase SQL Editor, in this order:
 
-### Step 5: Start the application
+1. `Backend/migrations/20261101_password_reset.sql`
+2. `Backend/migrations/20261102_password_reset_security.sql`
 
-```bash
-python app.py
-```
+These migrations add the required `users.password_version` field and password-reset database structures, enable the relevant RLS protections, and revoke direct API grants. They do not modify existing users or complaints.
 
-Open the application at:
+The migrations must be executed manually. The application does not execute database migrations automatically during startup.
 
-```text
-http://127.0.0.1:5000
-```
+The migrations have already been applied to the Supabase database used for the current development environment.
 
-## 11. Database Health Check
+---
 
-The application initializes without opening a database connection during startup.
+## API and Health Check
 
-To test the database connection, open:
+The application includes a database health-check endpoint.
+
+Start the application and open:
 
 ```text
 http://127.0.0.1:5000/api/health/database
@@ -458,32 +488,23 @@ An example successful response is:
 
 This endpoint verifies database connectivity by executing a simple SQL query.
 
-## 12. Password Recovery Database Setup
+---
 
-Password recovery requires additional database migrations.
+## Production Deployment
 
-For another Supabase database, run the following migration files in the Supabase SQL Editor, in this order:
+### Deploying on Vercel
 
-1. `Backend/migrations/20261101_password_reset.sql`
-2. `Backend/migrations/20261102_password_reset_security.sql`
+The application is deployed on Vercel using the repository root as the project directory.
 
-These migrations add the required `users.password_version` field and password-reset database structures, enable the relevant RLS protections, and revoke direct API grants. They do not modify existing users or complaints. Application startup does not create tables, run migrations, seed demo reports, or disable RLS.
+#### Step 1: Import the repository
 
-The migrations must be executed manually. The application does not execute database migrations automatically during startup.
+1. Open the Vercel Dashboard.
+2. Import the CivicLens GitHub repository.
+3. Select the repository root as the project directory.
 
-The migrations have already been applied to the Supabase database used for the current development environment.
+#### Step 2: Configure environment variables
 
-## 13. Production Deployment on Vercel
-
-### Step 1: Import the repository
-
-Open the Vercel Dashboard and import the CivicLens GitHub repository.
-
-Select the repository root as the project directory.
-
-### Step 2: Configure environment variables
-
-Configure the following variables under Vercel Project Settings → Environment Variables.
+Configure the following variables under **Vercel Project Settings → Environment Variables**.
 
 | Variable | Purpose |
 |---|---|
@@ -503,7 +524,7 @@ Configure the following variables under Vercel Project Settings → Environment 
 
 Use the shared Supabase Session Pooler URL from **Connect** (port `5432`) with SSL. The production app also accepts the Transaction Pooler on port `6543`; prepared statements are disabled for compatibility. Direct database hosts and SQLite URLs are rejected in production.
 
-Set:
+Set the production values:
 
 ```dotenv
 FLASK_ENV=production
@@ -513,9 +534,9 @@ FRONTEND_URL=https://civiclens-lake.vercel.app
 
 Replace the frontend URL if the production deployment uses another domain.
 
-For password recovery, set `FRONTEND_URL` to the exact application origin. Reset links use `${FRONTEND_URL}/reset-password#token=...`; set it to `http://127.0.0.1:5000` locally and the HTTPS deployment origin in Vercel. The token is placed in the URL fragment, read by the reset page, and removed from browser history; fragments are not sent in HTTP requests or Vercel request logs.
+For password recovery, set `FRONTEND_URL` to the exact application origin. Reset links use `${FRONTEND_URL}/reset-password#token=...`. The token is placed in the URL fragment, read by the reset page, and removed from browser history; fragments are not sent in HTTP requests or Vercel request logs.
 
-### Step 3: Configure administrator password hash
+#### Step 3: Configure the administrator password hash
 
 Generate a Werkzeug-compatible hash locally:
 
@@ -529,7 +550,7 @@ In Vercel, open **Project Settings → Environment Variables**, set `ADMIN_USERN
 
 Do not store the administrator's actual password in the repository.
 
-### Step 4: Deploy
+#### Step 4: Deploy and verify
 
 Deploy the project through the Vercel Dashboard.
 
@@ -545,11 +566,21 @@ After deployment, verify that:
 
 The configured production function permits up to 30 seconds for password recovery email processing.
 
-## 14. Automated Testing
+### GCP alongside Vercel
+
+GCP is intended to complement the current Vercel and Supabase architecture, not replace it.
+
+A future Google Cloud Storage integration can store complaint images and uploaded files. When implemented, the backend can communicate with the GCP service using server-side credentials or an appropriately configured service identity. Credentials must be stored securely and must never be exposed in frontend JavaScript or committed to GitHub.
+
+The existing production application does not require GCP to run. Do not add GCP environment variables or claim a GCP deployment until the service has actually been configured and tested.
+
+---
+
+## Automated Testing
 
 The application includes automated tests using Python's `unittest` framework.
 
-Execute:
+Run the test suite:
 
 ```bash
 python -m unittest discover -s tests -v
@@ -567,7 +598,7 @@ Production database and real email delivery should additionally be verified thro
 
 ### Important Test Scenarios
 
-| Test | Expected result |
+| Test | Expected Result |
 |---|---|
 | Citizen registration | Account created successfully |
 | Citizen login | Authorized session established |
@@ -583,58 +614,63 @@ Production database and real email delivery should additionally be verified thro
 | Login rate limiting | Excessive attempts restricted |
 | Database health check | Successful connection reported |
 
-## 15. Cloud Computing Concepts Demonstrated
+---
+
+## Cloud Computing Concepts Demonstrated
 
 CivicLens demonstrates the practical application of several cloud computing concepts.
 
-**1. Platform as a Service (PaaS)**
+1. **Platform as a Service (PaaS):** Vercel provides a managed platform for application deployment and execution without manually configuring and maintaining an application server.
+2. **Serverless Computing:** The Python Flask application is executed through Vercel Functions. Application requests are handled through the managed cloud runtime rather than a continuously managed server maintained by the project team.
+3. **Database as a Service (DBaaS):** Supabase provides a managed PostgreSQL database, eliminating the requirement to maintain a separate database server manually.
+4. **Database Connection Pooling:** Supavisor manages database connections and provides an intermediary between application requests and PostgreSQL.
+5. **Cloud-Based Deployment:** The application is publicly accessible through its Vercel production deployment.
+6. **Cloud Environment Configuration:** Sensitive deployment settings are maintained outside the source code through environment variables.
+7. **Cloud Monitoring and Diagnostics:** Vercel deployment and function logs, along with the application database health endpoint, help identify application and connectivity problems.
+8. **Secure Cloud Communication:** HTTPS is used for application access, while SSL is required for production PostgreSQL communication.
+9. **Multi-Cloud Extensibility:** The architecture can be extended with GCP services alongside the existing Vercel hosting and Supabase database. GCP service integration remains planned until configured.
 
-Vercel provides a managed platform for application deployment and execution without manually configuring and maintaining an application server.
+---
 
-**2. Serverless Computing**
+## GCP Integration Roadmap
 
-The Python Flask application is executed through Vercel Functions. Application requests are handled through the managed cloud runtime rather than a continuously managed server maintained by the project team.
+The following is a proposed extension, not a description of functionality already deployed.
 
-**3. Database as a Service (DBaaS)**
+### Proposed Google Cloud Storage Integration
 
-Supabase provides a managed PostgreSQL database, eliminating the requirement to maintain a separate database server manually.
+Google Cloud Storage can be integrated to store complaint photographs and other uploaded files.
 
-**4. Database Connection Pooling**
+Potential workflow:
 
-Supavisor manages database connections and provides an intermediary between application requests and PostgreSQL.
+1. A citizen submits a complaint with an image.
+2. The Flask backend validates the uploaded file.
+3. The backend uploads the file to a configured Cloud Storage bucket.
+4. The backend stores the resulting object reference or URL in the complaint record.
+5. Authorized users can view the complaint image through a controlled access mechanism.
 
-**5. Cloud-Based Deployment**
+Before enabling this feature, configure a GCP project, create a storage bucket, configure least-privilege access for the backend, and add the required credentials securely to the deployment environment. Review file type, file size, access-control, and public-exposure settings.
 
-The application is publicly accessible through its Vercel production deployment.
+---
 
-**6. Cloud Environment Configuration**
-
-Sensitive deployment settings are maintained outside the source code through environment variables.
-
-**7. Cloud Monitoring and Diagnostics**
-
-Vercel deployment and function logs, along with the application database health endpoint, help identify application and connectivity problems.
-
-**8. Secure Cloud Communication**
-
-HTTPS is used for application access, while SSL is required for production PostgreSQL communication.
-
-## 16. Limitations
+## Limitations
 
 The current implementation has some limitations:
 
 - Administrator access uses one centrally configured administrator account.
 - Email delivery is synchronous with the password recovery request.
-- The application depends on external hosting, database and email service availability.
+- The application depends on external hosting, database, and email service availability.
 - Application-level authorization is primarily enforced through Flask sessions and backend ownership checks.
 - The current database connection uses privileged backend credentials, so RLS should not be assumed to provide per-citizen authorization for those direct SQL connections.
-- The current implementation does not establish a dedicated, independently managed object-storage architecture in the described database configuration.
+- The current implementation does not establish a dedicated, independently managed object-storage architecture.
+- GCP services are not yet part of the current application request flow.
 
-## 17. Future Scope
+---
+
+## Future Enhancements
 
 CivicLens can be extended through several additional capabilities:
 
-- Integration with Supabase Storage for persistent complaint photographs.
+- Integration with Google Cloud Storage or Supabase Storage for persistent complaint photographs.
 - Geographical visualization of public complaints.
 - Duplicate complaint detection.
 - Complaint prioritization based on severity and frequency.
@@ -644,22 +680,23 @@ CivicLens can be extended through several additional capabilities:
 - Integration with municipal authorities and public-service departments.
 - Support for multiple administrative users and geographical regions.
 - Asynchronous notification processing.
+- Integration of additional GCP services where they provide a clear benefit.
 
-## 18. Conclusion
+---
+
+## Conclusion
 
 CivicLens presents a cloud-based approach to improving the management of public infrastructure complaints.
 
 By combining Python Flask, Supabase PostgreSQL, and Vercel, the application provides an accessible platform for submitting, managing, and tracking citizen complaints.
 
-The implementation demonstrates the practical use of serverless application execution, managed relational database services, connection pooling, cloud deployment, environment-based configuration, and secure application communication.
-
-The project highlights how publicly accessible cloud infrastructure can support applications designed to address everyday community problems.
+The implementation demonstrates serverless application execution, managed relational database services, connection pooling, cloud deployment, environment-based configuration, and secure application communication. The architecture can also be extended through Google Cloud Platform services without replacing the current hosting and database setup.
 
 CivicLens provides a foundation for a more transparent, organized, and community-oriented public issue management system.
 
 ---
 
-## 19. Project Contributors
+## Contributors
 
 **Developed by:**
 
@@ -667,28 +704,33 @@ CivicLens provides a foundation for a more transparent, organized, and community
 2. [Student Name – Roll Number]
 3. [Student Name – Roll Number]
 
-**Department:** Computer Science and Engineering
-
-**Institution:** [Institute Name]
-
+**Department:** Computer Science and Engineering  
+**Institution:** [Institute Name]  
 **Academic Project:** Cloud Computing
 
 ---
 
-## 20. Useful Documentation
+## Useful Documentation
 
 - [Vercel Documentation](https://vercel.com/docs)
 - [Vercel Python Runtime](https://vercel.com/docs/functions/runtimes/python)
 - [Supabase Documentation](https://supabase.com/docs)
 - [Supabase PostgreSQL Connection Guide](https://supabase.com/docs/guides/database/connecting-to-postgres)
 - [Supabase Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)
+- [Google Cloud Documentation](https://cloud.google.com/docs)
+- [Google Cloud Storage Documentation](https://cloud.google.com/storage/docs)
 - [Flask Documentation](https://flask.palletsprojects.com/)
 - [SQLAlchemy Documentation](https://docs.sqlalchemy.org/)
 - [Psycopg Documentation](https://www.psycopg.org/)
 
 ---
 
-**Repository:** [Add your GitHub repository URL]
+## Repository and Live Demo
 
+**Repository:** [Add your GitHub repository URL]  
 **Live Application:** https://civiclens-lake.vercel.app
+"""
 
+output_path = "/mnt/data/README_CivicLens.md"
+pypandoc.convert_text(readme, "md", format="md", outputfile=output_path, extra_args=["--standalone"])
+print(f"Created: {output_path}")
