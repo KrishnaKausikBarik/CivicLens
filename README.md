@@ -1,6 +1,4 @@
-import pypandoc
 
-readme = r"""# CivicLens
 ### Cloud-Based Citizen Complaint Reporting and Tracking Platform
 
 **See the Problem. Report the Issue. Improve the Community.**
