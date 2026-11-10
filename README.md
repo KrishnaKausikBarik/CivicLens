@@ -207,9 +207,18 @@ When a citizen requests password recovery:
 4. The citizen uses the reset link to establish a new password.
 5. The token is invalidated after successful use.
 
-SMTP credentials are configured through environment variables.
+SMTP credentials are configured through environment variables. For local development, add these values to the ignored project-root `.env`; in Vercel, set them in Project Settings for each environment that should send email:
 
-Gmail App Passwords are used instead of normal account passwords.
+```dotenv
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your-address@gmail.com
+SMTP_PASSWORD=your-16-character-gmail-app-password
+SMTP_SENDER_EMAIL=your-address@gmail.com
+SMTP_SENDER_NAME=CivicLens
+```
+
+Enable 2-Step Verification on the Google account, then create an App Password in Google Account security settings. Use that 16-character value as `SMTP_PASSWORD`; do not use the normal Gmail password. Port `587` uses STARTTLS, while port `465` uses implicit TLS. The sender address should be the authenticated Gmail account. Keep real credentials out of Git. SMTP delivery runs synchronously with a 10-second connection timeout; the Vercel function allows up to 30 seconds for password recovery email processing.
 
 **Note:** Gmail SMTP is an external email integration, not the application's primary cloud hosting service.
 
@@ -388,7 +397,7 @@ FRONTEND_URL=http://127.0.0.1:5000
 
 COOKIE_SECURE=false
 
-ADMIN_USERNAME=your_admin_username
+ADMIN_USERNAME=admin
 
 ADMIN_PASSWORD_HASH=your_werkzeug_password_hash
 
@@ -413,6 +422,8 @@ postgresql+psycopg://
 Keep SSL enabled and percent-encode reserved characters in database passwords.
 
 Never commit `.env` to GitHub.
+
+The administrator username is fixed as `admin`; the configured password is `admin123`. `ADMIN_PASSWORD_HASH` must contain a Werkzeug hash that verifies this password; do not store the plain-text password in the repository. `.env.example` contains placeholders only.
 
 ### Step 5: Start the application
 
@@ -456,7 +467,7 @@ For another Supabase database, run the following migration files in the Supabase
 1. `Backend/migrations/20261101_password_reset.sql`
 2. `Backend/migrations/20261102_password_reset_security.sql`
 
-These migrations add the required password version and reset-related database structures, enable the relevant RLS protections, and revoke direct API grants.
+These migrations add the required `users.password_version` field and password-reset database structures, enable the relevant RLS protections, and revoke direct API grants. They do not modify existing users or complaints. Application startup does not create tables, run migrations, seed demo reports, or disable RLS.
 
 The migrations must be executed manually. The application does not execute database migrations automatically during startup.
 
@@ -490,7 +501,7 @@ Configure the following variables under Vercel Project Settings → Environment 
 | `SMTP_SENDER_EMAIL` | Sender email address |
 | `SMTP_SENDER_NAME` | Sender display name |
 
-Use the correct Supabase Session Pooler URL with SSL.
+Use the shared Supabase Session Pooler URL from **Connect** (port `5432`) with SSL. The production app also accepts the Transaction Pooler on port `6543`; prepared statements are disabled for compatibility. Direct database hosts and SQLite URLs are rejected in production.
 
 Set:
 
@@ -502,6 +513,8 @@ FRONTEND_URL=https://civiclens-lake.vercel.app
 
 Replace the frontend URL if the production deployment uses another domain.
 
+For password recovery, set `FRONTEND_URL` to the exact application origin. Reset links use `${FRONTEND_URL}/reset-password#token=...`; set it to `http://127.0.0.1:5000` locally and the HTTPS deployment origin in Vercel. The token is placed in the URL fragment, read by the reset page, and removed from browser history; fragments are not sent in HTTP requests or Vercel request logs.
+
 ### Step 3: Configure administrator password hash
 
 Generate a Werkzeug-compatible hash locally:
@@ -511,6 +524,8 @@ python -c "from getpass import getpass; from werkzeug.security import generate_p
 ```
 
 Add the generated hash to the Vercel `ADMIN_PASSWORD_HASH` setting.
+
+In Vercel, open **Project Settings → Environment Variables**, set `ADMIN_USERNAME` to `admin`, and set `ADMIN_PASSWORD_HASH` to the generated hash. Select **Production** (and **Preview** if needed), save the variables, then redeploy the latest deployment so the environment changes take effect.
 
 Do not store the administrator's actual password in the repository.
 

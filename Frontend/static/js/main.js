@@ -1121,13 +1121,6 @@ window.closeLoginModal = function() {
   document.getElementById('loginModal')?.classList.remove('open');
 };
 
-document.getElementById('forgotPasswordToggle')?.addEventListener('click', (event) => {
-  const help = document.getElementById('forgotPasswordHelp');
-  if (!help) return;
-  help.hidden = !help.hidden;
-  event.currentTarget.setAttribute('aria-expanded', String(!help.hidden));
-});
-
 window.handleLoginSubmit = async function(e) {
   e.preventDefault();
   const emailInput = document.getElementById('loginUser');

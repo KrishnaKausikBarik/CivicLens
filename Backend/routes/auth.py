@@ -102,7 +102,9 @@ def _reset_token_is_valid(raw_token):
 
 
 def _admin_username():
-    return os.environ.get("ADMIN_USERNAME", "admin")
+    # CivicLens has one fixed administrator identity. Keep the env var for
+    # deployment validation and diagnostics, but never allow it to add accounts.
+    return "admin"
 
 
 def _admin_password_hash():
@@ -308,7 +310,21 @@ def admin_login():
         return jsonify({"success": False, "error": message}), status
     admin_username = _admin_username()
     password_hash = _admin_password_hash()
-    if not password_hash or username.strip() != admin_username or not check_password_hash(password_hash, password):
+    if not password_hash:
+        current_app.logger.error("Admin login unavailable: ADMIN_PASSWORD_HASH is not configured.")
+        limited = _record_login_failure(keys, identity_limit=5, ip_limit=20, now=now)
+        status = 429 if limited else 503
+        message = "Too many login attempts. Try again in 15 minutes." if limited else "Administrator login is temporarily unavailable."
+        return jsonify({"success": False, "error": message}), status
+
+    try:
+        password_matches = check_password_hash(password_hash, password)
+    except (ValueError, TypeError):
+        current_app.logger.error("Admin login unavailable: ADMIN_PASSWORD_HASH is not a valid Werkzeug hash.")
+        return jsonify({"success": False, "error": "Administrator login is temporarily unavailable."}), 503
+
+    if username.strip() != admin_username or not password_matches:
+        current_app.logger.warning("Admin login rejected (username_match=%s).", username.strip() == admin_username)
         limited = _record_login_failure(keys, identity_limit=5, ip_limit=20, now=now)
         status = 429 if limited else 401
         message = "Too many login attempts. Try again in 15 minutes." if limited else "Invalid username or password"
@@ -316,6 +332,7 @@ def admin_login():
     _clear_login_identity_counter(keys[1])
     session.clear()
     session["role"] = "admin"
+    current_app.logger.info("Admin login succeeded; administrator session role established.")
     return jsonify({"success": True, "user": {"username": admin_username, "role": "admin"}}), 200
 
 
