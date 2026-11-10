@@ -7,7 +7,7 @@ CivicLens is a cloud-hosted citizen complaint management application that helps 
 
 Citizens can register, log in, submit complaints, and track their reports. Administrators can review complaints, view submitter information, and update complaint statuses.
 
-The application is built with **Python Flask**, **HTML**, **CSS**, **vanilla JavaScript**, and **Supabase PostgreSQL**. It is deployed on **Vercel**, where the Flask backend runs through Vercel's Python Functions runtime. **Google Cloud Platform (GCP)** is included as an additional cloud platform in the project technology roadmap; the current implementation described here does not yet depend on a configured GCP service.
+The application is built with **Python Flask**, **HTML**, **CSS**, **vanilla JavaScript**, and **Supabase PostgreSQL**. The current production deployment is on **Vercel**, where the Flask backend runs through Vercel's Python Functions runtime. **Google Cloud Platform (GCP)** is documented as a proposed extension: Google Cloud Storage can be integrated for complaint photographs and uploaded files. This GCP integration is a roadmap item and must not be described as active until it has been configured, connected to the backend, and tested.
 
 ---
 
@@ -16,6 +16,8 @@ The application is built with **Python Flask**, **HTML**, **CSS**, **vanilla Jav
 - [Features](#features)
 - [Technology Stack](#technology-stack)
 - [System Architecture](#system-architecture)
+  - [Current Deployment Architecture](#current-deployment-architecture)
+  - [Proposed GCP Extension Architecture](#proposed-gcp-extension-architecture)
 - [Cloud Platforms and Services](#cloud-platforms-and-services)
 - [Database Design](#database-design)
 - [Authentication and Security](#authentication-and-security)
@@ -85,7 +87,7 @@ The application is built with **Python Flask**, **HTML**, **CSS**, **vanilla Jav
 | Database Driver | Psycopg | PostgreSQL connectivity |
 | Primary Cloud Hosting | Vercel | Application deployment and hosting |
 | Backend Runtime | Vercel Python Functions | Serverless backend execution |
-| Additional Cloud Platform | Google Cloud Platform (GCP) | Additional cloud-service integration |
+| Proposed GCP Storage Extension | Google Cloud Storage | Planned storage for complaint photographs; not yet integrated |
 | Database Connection Pooling | Supavisor | Managed PostgreSQL connection pooling |
 | Authentication | Flask session-based authentication | Citizen and administrator authentication |
 | Password Security | Werkzeug | Password hashing |
@@ -125,34 +127,73 @@ The data layer uses Supabase PostgreSQL, a managed cloud relational database. SQ
 
 Database credentials are maintained in the backend environment and are not exposed to the browser.
 
-### Architecture Diagram
+### Current Deployment Architecture
+
+The following diagram describes the application that is currently deployed. Vercel hosts the frontend assets and executes the Flask application through its Python Functions runtime. Supabase provides the managed PostgreSQL database. Gmail SMTP is used for password-recovery email delivery.
 
 ```mermaid
 flowchart TD
-    A[Citizens and Administrators] --> B[Web Browser]
-    B --> C[Vercel Cloud Platform]
-    C --> D[Static Frontend]
-    C --> E[Python Runtime / Flask Function]
+    U[Citizens and Administrators] --> B[Web Browser]
+    B -->|HTTPS| V[Vercel Cloud Platform]
 
-    E --> F[Authentication and Authorization]
-    E --> G[Complaint Management APIs]
-    E --> H[Password Recovery]
+    subgraph VERCEL[Current Application Hosting - Vercel]
+        V --> FE[HTML / CSS / Vanilla JavaScript Frontend]
+        V --> FN[Vercel Python Function]
+        FN --> FL[Flask Application]
+        FL --> AUTH[Authentication and Authorization]
+        FL --> API[Complaint Management APIs]
+        FL --> PW[Password Recovery]
+    end
 
-    F --> I[SQLAlchemy ORM]
-    G --> I
-    H --> I
+    AUTH --> ORM[SQLAlchemy ORM]
+    API --> ORM
+    PW --> ORM
+    ORM --> PSY[Psycopg PostgreSQL Driver]
+    PSY --> POOL[Supavisor Session Pooler]
+    POOL --> DB[(Supabase PostgreSQL)]
 
-    I --> J[Supavisor Connection Pooler]
-    J --> K[Supabase PostgreSQL]
+    PW --> SMTP[Gmail SMTP]
+    SMTP --> MAIL[Password Recovery Email]
 
-    H --> L[Gmail SMTP]
-    L --> M[Password Recovery Email]
-
-    N[Google Cloud Platform]
-    N -. Additional integration planned .-> O[Google Cloud Services]
+    classDef current fill:#e8f1ff,stroke:#2864b4,color:#12345a;
+    classDef database fill:#e9f7ef,stroke:#24834b,color:#154c2d;
+    class V,FE,FN,FL,AUTH,API,PW,ORM,PSY,POOL current;
+    class DB database;
 ```
 
-The GCP connection shown with a dotted line represents a planned additional integration. It is not part of the current request-processing path.
+### Proposed GCP Extension Architecture
+
+The proposed GCP integration is to use **Google Cloud Storage (GCS)** as object storage for complaint photographs and other uploaded files. The existing Vercel-hosted Flask backend and Supabase PostgreSQL database would remain in place. The backend—not browser JavaScript—would authenticate to GCS, validate uploads, store files in a private bucket, and save an object reference in the relevant complaint record.
+
+```mermaid
+flowchart TD
+    C[Citizen] -->|Complaint and Photograph| UI[Existing CivicLens Frontend on Vercel]
+    UI -->|Authenticated HTTPS Request| FL[Existing Flask Backend on Vercel]
+
+    FL --> VAL[Validate Session, File Type and File Size]
+    VAL -->|Complaint Fields| ORM[SQLAlchemy / Psycopg]
+    ORM --> POOL[Supavisor]
+    POOL --> DB[(Supabase PostgreSQL)]
+
+    VAL -. Planned server-side upload .-> GCSAPI[Google Cloud Storage Client]
+    subgraph GCP[Google Cloud Platform - Proposed Extension]
+        GCSAPI --> IAM[Service Identity / IAM Permissions]
+        IAM --> BUCKET[(Private Cloud Storage Bucket)]
+    end
+
+    BUCKET -. Object name or storage reference .-> META[Complaint Image Reference]
+    META -. Persist reference after integration .-> DB
+    FL -->|Authorized image access or short-lived signed URL| UI
+
+    classDef existing fill:#e8f1ff,stroke:#2864b4,color:#12345a;
+    classDef planned fill:#fff3dc,stroke:#bd8420,color:#66450b,stroke-dasharray: 5 5;
+    classDef database fill:#e9f7ef,stroke:#24834b,color:#154c2d;
+    class FL,UI,VAL,ORM,POOL existing;
+    class GCSAPI,IAM,BUCKET,META planned;
+    class DB database;
+```
+
+**Status of the second diagram:** it is a proposed design, not a record of a completed integration. The GCS bucket, IAM/service identity, backend upload code, storage reference field, and controlled image-access flow must all be implemented and tested before this diagram can be presented as the deployed architecture. If the existing `reports` table does not contain an image-reference field, a reviewed database migration will be needed before persisting object references.
 
 ---
 
@@ -225,13 +266,22 @@ SMTP delivery runs synchronously with a 10-second connection timeout. The Vercel
 
 > Gmail SMTP is an external email integration, not the application's primary cloud hosting service.
 
-### 5. Google Cloud Platform (GCP)
+### 5. Google Cloud Platform (GCP) - Proposed Integration
 
-GCP is included as an additional cloud platform for extending CivicLens without replacing the existing Vercel deployment or Supabase database.
+Google Cloud Platform is included in the CivicLens technology roadmap as a proposed extension. The specific service selected for the first GCP integration is **Google Cloud Storage**, which is designed for storing object data such as complaint photographs and uploaded files.
 
-The current project documentation does not establish that a GCP service has been configured or connected to the running application. A suitable next integration is **Google Cloud Storage** for storing complaint photographs and other uploaded files.
+The current application deployment described in this README uses Vercel for application hosting and Supabase PostgreSQL for persistent relational data. No GCP service is currently part of the application's request-processing path in this version.
 
-Until that integration is implemented, complaint-image storage through GCP should be treated as planned functionality, not an existing feature. The existing application deployment continues to use Vercel and Supabase.
+The proposed integration would add the following capabilities:
+
+- Store complaint photographs in a private Google Cloud Storage bucket.
+- Keep file bytes outside the relational database.
+- Store only an object name or storage reference in the corresponding PostgreSQL complaint record.
+- Let the Flask backend validate uploads and mediate authorized image access.
+- Use a dedicated service identity with least-privilege IAM permissions.
+- Avoid exposing service-account credentials or unrestricted bucket access in browser JavaScript.
+
+This is a planned GCP integration. It must not be listed as an implemented cloud service until the bucket, IAM permissions, backend upload/download logic, database reference, and end-to-end tests have been completed.
 
 ---
 
@@ -564,13 +614,13 @@ After deployment, verify that:
 
 The configured production function permits up to 30 seconds for password recovery email processing.
 
-### GCP alongside Vercel
+### Proposed GCP integration alongside Vercel
 
-GCP is intended to complement the current Vercel and Supabase architecture, not replace it.
+The current production deployment remains on Vercel. The proposed GCP extension does not migrate the Flask application to Cloud Run and does not replace Supabase PostgreSQL. Instead, it adds Google Cloud Storage as a separate object-storage service for complaint photographs.
 
-A future Google Cloud Storage integration can store complaint images and uploaded files. When implemented, the backend can communicate with the GCP service using server-side credentials or an appropriately configured service identity. Credentials must be stored securely and must never be exposed in frontend JavaScript or committed to GitHub.
+When implemented, the Flask backend will communicate with the GCS bucket using a server-side service identity with least-privilege IAM permissions. The backend should validate file type and size, upload to a private bucket, and store the object reference in the complaint record. Image retrieval should be authorized by the backend, for example by generating short-lived signed URLs when appropriate.
 
-The existing production application does not require GCP to run. Do not add GCP environment variables or claim a GCP deployment until the service has actually been configured and tested.
+The existing production application does not require GCP to run. Do not add GCP environment variables or claim GCP usage until the storage bucket, permissions, backend integration, database reference, and end-to-end behavior have actually been configured and tested.
 
 ---
 
@@ -626,27 +676,38 @@ CivicLens demonstrates the practical application of several cloud computing conc
 6. **Cloud Environment Configuration:** Sensitive deployment settings are maintained outside the source code through environment variables.
 7. **Cloud Monitoring and Diagnostics:** Vercel deployment and function logs, along with the application database health endpoint, help identify application and connectivity problems.
 8. **Secure Cloud Communication:** HTTPS is used for application access, while SSL is required for production PostgreSQL communication.
-9. **Multi-Cloud Extensibility:** The architecture can be extended with GCP services alongside the existing Vercel hosting and Supabase database. GCP service integration remains planned until configured.
+9. **Planned GCP Object Storage Extension:** Google Cloud Storage is a proposed future service for complaint photographs. It is not part of the current running application until the bucket, IAM configuration, backend integration, and tests have been completed.
 
 ---
 
 ## GCP Integration Roadmap
 
-The following is a proposed extension, not a description of functionality already deployed.
+The following design is a proposed extension, not a description of functionality already deployed.
 
 ### Proposed Google Cloud Storage Integration
 
-Google Cloud Storage can be integrated to store complaint photographs and other uploaded files.
+Google Cloud Storage can be integrated as object storage for complaint photographs and other uploaded files. The current Vercel-hosted Flask application and Supabase PostgreSQL database can remain in place.
 
-Potential workflow:
+**Proposed request flow:**
 
-1. A citizen submits a complaint with an image.
-2. The Flask backend validates the uploaded file.
-3. The backend uploads the file to a configured Cloud Storage bucket.
-4. The backend stores the resulting object reference or URL in the complaint record.
-5. Authorized users can view the complaint image through a controlled access mechanism.
+1. A citizen submits a complaint with a photograph through the existing frontend.
+2. The Flask backend authenticates the user and validates the file type, file size, and request.
+3. The backend uses a dedicated GCP service identity to upload the file to a private Google Cloud Storage bucket.
+4. Cloud Storage returns an object name or storage reference.
+5. The backend stores that reference in the corresponding PostgreSQL complaint record. A database migration may be required if the existing schema does not have an image-reference field.
+6. When an authorized user views the complaint, the backend checks access and provides the image through a controlled mechanism, such as a short-lived signed URL.
 
-Before enabling this feature, configure a GCP project, create a storage bucket, configure least-privilege access for the backend, and add the required credentials securely to the deployment environment. Review file type, file size, access-control, and public-exposure settings.
+**Implementation checklist:**
+
+- Create or select a GCP project and enable the Cloud Storage API.
+- Create a bucket in an appropriate region and keep public access prevention enabled unless there is a justified requirement otherwise.
+- Create a dedicated service identity and grant only the bucket permissions required by the application.
+- Store runtime credentials securely; never place service-account keys in frontend code or commit them to GitHub. Prefer an attached service identity where the hosting environment supports it; otherwise use an approved secure credential-delivery mechanism.
+- Implement server-side upload and authorized retrieval in Flask.
+- Add and review a database field for the storage object name/reference if needed.
+- Test successful uploads, invalid file types, oversized files, unauthorized access, missing objects, and image retrieval.
+
+Only after these steps are complete should Google Cloud Storage be moved from the roadmap into the implemented technology stack and current architecture diagram.
 
 ---
 
@@ -659,8 +720,8 @@ The current implementation has some limitations:
 - The application depends on external hosting, database, and email service availability.
 - Application-level authorization is primarily enforced through Flask sessions and backend ownership checks.
 - The current database connection uses privileged backend credentials, so RLS should not be assumed to provide per-citizen authorization for those direct SQL connections.
-- The current implementation does not establish a dedicated, independently managed object-storage architecture.
-- GCP services are not yet part of the current application request flow.
+- The current implementation does not establish a dedicated, independently managed object-storage architecture for complaint photographs.
+- Google Cloud Storage is a proposed extension and is not yet part of the current application request flow.
 
 ---
 
@@ -686,9 +747,9 @@ CivicLens can be extended through several additional capabilities:
 
 CivicLens presents a cloud-based approach to improving the management of public infrastructure complaints.
 
-By combining Python Flask, Supabase PostgreSQL, and Vercel, the application provides an accessible platform for submitting, managing, and tracking citizen complaints.
+By combining Python Flask, Supabase PostgreSQL, and Vercel, the current implementation provides an accessible platform for submitting, managing, and tracking citizen complaints.
 
-The implementation demonstrates serverless application execution, managed relational database services, connection pooling, cloud deployment, environment-based configuration, and secure application communication. The architecture can also be extended through Google Cloud Platform services without replacing the current hosting and database setup.
+The implementation demonstrates serverless application execution, managed relational database services, connection pooling, cloud deployment, environment-based configuration, and secure application communication. Google Cloud Storage is documented as a proposed extension for complaint photographs; it should be described as implemented only after the integration has been configured and tested.
 
 CivicLens provides a foundation for a more transparent, organized, and community-oriented public issue management system.
 
@@ -726,7 +787,9 @@ CivicLens provides a foundation for a more transparent, organized, and community
 ## Repository and Live Demo
 
 **Repository:** [Add your GitHub repository URL]  
-**Live Application:** https://civiclens-lake.vercel.app
+**Live Application (current Vercel deployment):** https://civiclens-lake.vercel.app
+
+**GCP status:** Google Cloud Storage is a proposed extension and is not represented as an active service in the current deployment.
 """
 
 output_path = "/mnt/data/README_CivicLens.md"
