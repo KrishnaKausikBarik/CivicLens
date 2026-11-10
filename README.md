@@ -5,7 +5,7 @@
 
 CivicLens is a cloud-hosted citizen complaint management application designed to help communities report, monitor, and track public infrastructure problems through a centralized digital platform.
 
-The application provides separate interfaces for citizens and administrators. Citizens can register, log in, submit complaints, and monitor their submitted reports. Administrators can review complaints, identify their submitters, and update complaint statuses.
+The application provides separate interfaces for citizens & administrators. Citizens can register, log in, submit complaints, and monitor their submitted reports. Administrators can review complaints, identify their submitters, and update complaint statuses.
 
 CivicLens is built using Python Flask, vanilla JavaScript, and Supabase PostgreSQL. The application is deployed on Vercel, where the Flask backend runs through Vercel's Python Functions runtime.
 
